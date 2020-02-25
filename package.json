@@ -1,0 +1,24 @@
+{
+  "name": "ab-ess",
+  "version": "0.1.0-alpha",
+  "description": "expression language for JSON like data",
+  "main": "src/index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "dependencies": {
+    "tagscript": "^0.3.0",
+    "ab-parse": "^0.1.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "logic",
+    "ess",
+    "schema"
+  ],
+  "author": "Alwin Blok",
+  "license": "SEE LICENSE IN LICENSE"
+}

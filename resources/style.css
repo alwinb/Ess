@@ -1,0 +1,73 @@
+
+/** SVG diagrams */
+
+path, .node {
+	fill:none;
+	stroke:black;
+	stroke-width:1; }	
+
+path.false {
+	stroke-dasharray:3,3; }
+
+.node {
+	fill:white;
+	stroke:black; }
+
+text {
+	font-size:18.5;
+	fill:black;
+	text-anchor:middle;
+	dominant-baseline:central;
+	font-style:italic; }
+
+text.return, text.type {
+	font-size:14.8;
+	dominant-baseline:central;
+	font-style:normal;
+}
+
+text.type {
+	font-family:monospace;
+}
+
+#top text, #bot text {
+	font-style:normal;
+}
+
+/** Debug/ output style **/
+
+.box {
+  float:left;
+  padding:5px;
+  border:1px solid black;
+  margin-left:-1px;
+}
+
+br.clear {
+  clear:both;
+}
+
+/** REPL styles */
+
+.prompt, .input, .prompt input, .output {
+	border:none;
+	outline:none;
+	margin:0;padding:0;
+	width:95%; /* FIXME */
+	font-family:monospace;
+	font-size:16px;
+	line-height:1.6em;
+	white-space:pre;
+	background:none;
+	color:inherit;
+}
+
+.prompt::before, .input::before {
+	content:'> ';
+	white-space: nowrap;
+}
+
+.output.error {
+  color:red;
+}
+

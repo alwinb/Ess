@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>REPL</title>
+	<meta charset="utf-8"/>
+	<script src="./ess.min.js"></script>
+	<script src="./repl.js"></script>
+	<style>
+
+	/** svg styles for the bdds */
+
+	path, .node {
+		fill:none;
+		stroke:black;
+		stroke-width:1; }	
+
+	path.false {
+		stroke-dasharray:3,3; }
+
+	.node {
+		fill:white;
+		stroke:black; }
+
+	text {
+		font-size:18.5;
+		fill:black;
+		text-anchor:middle;
+		dominant-baseline:central;
+		font-style:italic; }
+
+	text.return, text.type {
+		font-size:14.8;
+		dominant-baseline:central;
+		font-style:normal;
+	}
+
+  text.type {
+		font-family:monospace;
+  }
+
+	#top text, #bot text {
+		font-style:normal; }
+
+
+	/** repl styles */
+
+	.prompt, .input, .prompt input, .output {
+		border:none;
+		outline:none;
+		margin:0;padding:0;
+		width:95%; /* FIXME */
+		font-family:monospace;
+		font-size:16px;
+		line-height:1.6em;
+		white-space:pre;
+		background:none;
+		color:inherit;
+	}
+	.prompt::before, .input::before {
+		content:'> ';
+		white-space: nowrap;
+	}
+  .output.error { color:red;}
+
+	</style>
+</head>
+<body>
+
+<div id="repl">
+</div>
+
+<!-- svg symbols for the nodes of the bdds -->
+<svg style="display:none">
+<defs id="desc">
+	<g id="test">
+		<circle class="node" cx="0" cy="0" r="12.8"/>
+	</g>
+	<g id="enter" transform="scale(.8)">
+		<rect class="node" x="-13.3" y="-13.3" width="26.6" height="26.6" transform="rotate(45)"/>
+		<g transform="rotate(45)">
+			<path class="enter-mark" d="M17.3 -13.3 l0 26.6" style="stroke-linecap:square"/> 
+		</g>
+	</g>
+	<g id="leave" transform="scale(.8)" style="stroke:black;fill:none">
+		<path class="leave-mark" d="M-13.3 0 l26.6 0" style="stroke-linecap:square"/> 
+	</g>
+</defs>
+</svg>
+
+<script>
+const log = console.log.bind (console)
+  
+function main () {
+	store = new Ess.Store ()
+
+	repl = new Repl (document.getElementById('repl'), _eval)
+	  .exec ('name:"joe" & flag?:boolean')
+	  .exec ('number | string')
+	  .exec ('string | number | false') // FIXME
+    .exec ('<1 & >2')
+
+	window.onclick = repl.focus
+	repl.focus()
+
+  function _eval (input) {
+		if (input === '.clear') {
+			store = new Ess.Store()
+			return window.setTimeout(repl.clear, 0)
+		}
+		else try {
+			var tm = Ess.parse (input)
+			var svg = Ess.toSvg (store.trace(store.eval(tm)).heap)
+			return { type:'html_raw', value:svg }
+		} catch (e) {
+			//throw e
+			return e//+ '\n'+e.stack
+		}
+	}
+}
+setTimeout (main,0)
+</script>
+</body>
+</html>
