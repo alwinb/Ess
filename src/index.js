@@ -1,63 +1,46 @@
-const log = console.log.bind (console)
 
 // The Ess Schema Language
 // =======================
 
-const parse = require ('./parser').parse
-const { Store, _typeid, toSvg } = require ('./ess-core.js')
+const { parse } = require ('./parser')
+const { Store, toSvg, run } = require ('./ess-core.js')
+const log = console.log.bind (console)
+const json = x => JSON.stringify (x, null, 2)
 
 function EssExp (string) {
-  let store = new Store ()
-  let tm = parse (string)
-  const x = store.eval (tm)
-
-  this.isTop = x === 1
-  this.isBottom = x === 0
-  this.test = function (input) {
-    // TODO
-  }
-
-  store = tm = null
-  return this
+  const {id, dtree} = _compile (string)
+  const isTop = x === 1
+  const isBottom = x === 0
+  const test = input => run (dtree, input)
+  return { source:string, isTop, isBottom, test }
 }
 
-function compile (string) {
+function _compile (string) {
   let store = new Store ()
   let tm = parse (string)
   x = store.eval (tm)
-  y = store.eval (tm)
-  let [tx, ty] = store.build (x, y)
-  //log (tx, ty)
+  return { id: x, dtree: store.build (x) }
 }
 
 
-// Runtime
-//  - Work in progress
+// Exports
+// -------
 
-const stack = []
-let ref = module
-let typ = null
+EssExp.internals = { parse, Store, toSvg }
+module.exports = EssExp
 
-const _info = obj => {
-  return 1
-}
+//* Quick test
 
-const enter = name => {
-  if (name in ref) {
-    stack.push (ref)
-    ref = ref [name]
-    typ = _typeid (ref)
-    return true
-  }
-  return false
-}
+// log ('#! JavaScript Test Output')
+// process.on('uncaughtException', (e) => {
+//   console.error ('#! JavaScript Error ')
+//   console.error ('/*', e, '*/')
+// })
 
+// var e = EssExp ('type:"click" -> clientX:number & clientY:number')
+// log (e.test ({ type:'click', clientX:1, clientY:1 }))
+// e.test ({})
+// e.test ({ })
+// e.test ({ type:'click'})
 
-module.exports = 
-  { parse, Store, toSvg }
-
-//*
-let e = compile ('type:"click" -> clientX:number & clientX:number')
-log (e)
-log (enter( 'exports') && enter ('parse') && enter ('name'), ref, typ)
 //*/

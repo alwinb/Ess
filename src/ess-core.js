@@ -46,7 +46,7 @@ const F = fn => fx => {
 
 const compareFNodesWith = cmp_x => (t1, t2) => {
   // NB this uses cmp_js on values and modalities
-  const cmp_int = internalPrimitiveCompare
+  const cmp_int = internalCompare
   const [c1, x1, y1] = t1
   const [c2, x2, y2] = t2
   return c1 < c2  ? -1
@@ -83,12 +83,12 @@ function cmpD (cmp_s, cmp_x) {
 // 
 //  [all strings] < null < false < true < [all numbers]
 // 
-// This total order is implemented by the internalPrimitiveCompare function below,
+// This total order is implemented by the internalCompare function below,
 //  which assumes its arguments to be of type number, boolean, string, or value null. 
 
 const _types = ['string', 'null', 'false', 'true', 'number']
 
-function _typeid  (a) {
+function internalType (a) {
   const t = typeof a
   return t === 'number' ? 4
     : t === 'string' ? 0
@@ -98,19 +98,11 @@ function _typeid  (a) {
     : 1 //// or error. 
 }
 
-const internalPrimitiveCompare = (a, b) => {
-  const ta = _typeid (a), tb = _typeid (b)
+const internalCompare = (a, b) => {
+  const ta = internalType (a), tb = internalType (b)
   return ta < tb ? -1 : ta > tb ? 1
     : (ta === 0 || ta === 4 ? (a < b ? -1 : a > b ? 1 : 0) : 0)
 }
-
-// Compare against a bound
-
-// const isValueWithinBound = (value, delim) => {
-//   const ta = _typeid (value), tb = _typeid (b)
-//   return ta < tb ? -1 : ta > tb ? 1
-//     : (ta === 0 || ta === 4 ? (a < b ? -1 : a > b ? 1 : 0) : 0)
-// }
 
 // ### Defining types as boolean combinations of delimiters on this order. 
 // For example:
@@ -144,7 +136,7 @@ function compareDelimiterTags (tag1, tag2) {
 }
 
 function compareNormalizedDelimiters ([tag1, value1], [tag2, value2]) {
-  return internalPrimitiveCompare (value1, value2) || compareDelimiterTags (tag1, tag2)
+  return internalCompare (value1, value2) || compareDelimiterTags (tag1, tag2)
 }
 
 
@@ -179,12 +171,13 @@ function traceG (out, x) {
   return { heap, element:mem_foldG (memo, out, inn, x) }
 }
 
-function buildG (out, ...xs) { 
+// This converts a term-id into a tree;
+// however, internally it preserves the subterm sharing. 
+
+function buildG (out, x) { 
   const inn = fx => fx
-  const r = []
   const memo = { v: new Map (cmp_js) } // memoisation of out :: X -> GX 
-  for (let x of xs) r.push (mem_foldG (memo, out, inn, x))
-  return r
+  return mem_foldG (memo, out, inn, x)
 }
 
 
@@ -248,7 +241,7 @@ function Store () {
   this.heap = shared._reify ()
 
   this.trace = x => traceG (out, x)
-  this.build = (...xs) => buildG (out, ...xs)
+  this.build = (x) => buildG (out, x)
   this.eval = eval
   this.apply = apply
 
@@ -392,7 +385,54 @@ function Store () {
 }
 
 
-// ## Layout
+// The runtime!
+// ------------
+
+const [value, pop, left, label, right] = [1, 1, 1, 2, 3]
+
+// Recall; internally;
+//  [all strings] < null < false < true < [all numbers]
+
+// run -- runs a prebuilt _tree_, e.g. nested tuples/ arrays in js
+//  -- which is secretly a DAG, on a js value as input
+
+function run (dtree, input) {
+  const stack = []
+  let ref = input, op, d,t // 
+
+  while ((op = dtree [0]) !== RETURN) { // Nice idea to return a trace, for debugging
+    if (op === LEAVE) {
+      dtree = dtree [pop]
+      ref = stack.pop()
+    }
+
+    else if (op === TEST) {
+      [d,t] = dtree [label] // [c, value], c being one of ≤ <
+      if (d === '<') // (ref < t)
+        dtree = internalCompare (ref, t) < 0 ? dtree [right] : dtree [left]
+      else // (ref ≤ t)
+        dtree = internalCompare (ref, t) <= 0 ? dtree [right] : dtree [left]
+    }
+
+    else if (op === ENTER) {
+      t = dtree [label]
+      if (ref != null && typeof ref === 'object' && (t in ref)) {
+        dtree = dtree [right]
+        stack[stack.length] = ref
+        ref = ref[t]
+      }
+      else {
+        dtree = dtree [left]
+      }
+    }
+  }
+  return dtree [value]
+}
+
+
+
+// Layout
+// ------
 
 // `rank` is an unsorted G-algebra,  
 // it is just the algebraic tree-height. 
@@ -472,4 +512,4 @@ function toSvg (heap) {
 }
 
 
-module.exports = { Store, drawG, toSvg, _typeid }
+module.exports = { Store, drawG, toSvg, run, internalType, internalCompare }
