@@ -1,23 +1,26 @@
 const { Lexer } = require ('ab-parse')
+const log = console.log.bind (console)
+const raw = String.raw
 
 // ## The lexer
+const
+ newline = raw `\n`
+,  space = raw `[ \t\f]+`
+,   type = raw `(?:boolean|number|string)\b` // removed integer (object, array) for the time being
+,  konst = raw `(?:null|true|false)\b`
+, symbol = raw `[a-zA-Z_][a-zA-Z_0-9]*`
+, escape = raw `\\(?:["bfnrt/\\]|[u][0-9A-Fa-f]{4})`
+,    nsc = raw `[^\\"\u0000-\u001F]+`
+, dquote = raw `"`
+,    exp = raw `(?:[Ee][+-]?[0-9]+)`
+,   frac = raw `(?:\.[0-9]+)`
+,    int = raw `(?:-?(?:0|[1-9][0-9]*))`
+, number = raw  `${int}${frac}?${exp}?`
+,  modal = raw `\?:|\:`
+,  tobot = raw `any\b|void\b`
+,    ops = raw `[()[\]|&!]|<->|->`
+,    cmp = raw `<=|<|>=|>`
 
-const newline = '\\n'
-  ,   space = '[ \\t\\f]+'
-  ,    type = '(?:boolean|number|string)\\b' // removed integer (object, array) for the time being
-  ,   konst = '(?:null|true|false)\\b'
-  ,  symbol = '[a-zA-Z_][a-zA-Z_0-9]*'
-  ,  escape = '\\\\(?:["bfnrt/\\\\]|[u][0-9A-Fa-f]{4})'
-  ,     nsc = '[^\\\\"\\u0000-\\u001F]+'
-  ,  dquote = '"'
-  ,     exp = '(?:[Ee][+-]?[0-9]+)'
-  ,    frac = '(?:\\.[0-9]+)'
-  ,     int = '(?:-?(?:0|[1-9][0-9]*))'
-  ,  number = int + frac + '?' + exp + '?'
-  ,   modal = '\\?:|\\:'
-  ,   tobot = 'any\\b|void\\b'
-  ,     ops = '[()[\\]|&!]|<->|<-|->'
-  ,     cmp = '<=|<|>=|>'
 
 const grammar = 
 { main: 

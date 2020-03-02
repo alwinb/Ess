@@ -23,7 +23,7 @@ module.exports = { parse, desugar }
 // >3 = IGT 3 && ILT null
 // "foo" = IGTE "foo" & ILTE "foo"
 
-// Desugared Terms will be trees of nodes TOP BOT AND OR NOT THEN WHEN IFF (ILT v) (IGT v) (ILTE v) (IGTE v)
+// Desugared Terms are trees of nodes TOP BOT AND OR NOT THEN WHEN IFF (ILT v) (IGT v) (ILTE v) (IGTE v)
 
 function desugar (tuple) {
   var op = tuple[0]
@@ -99,7 +99,7 @@ const optable =
 ,   '&': [    'and', T.INFIXL, 2]
 ,   '|': [     'or', T.INFIXL, 3]
 ,  '->': [   'then', T.INFIXR, 4]
-,  '<-': [   'when', T.INFIXL, 4]
+,  '<-': [   'when', T.INFIXL, 4] // Not used
 , '<->': [    'iff', T.INFIX , 5]
 ,   '>': [     'gt', T.PREFIX, 0]
 ,  '>=': [    'gte', T.PREFIX, 0]

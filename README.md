@@ -16,17 +16,19 @@ This is a consequence of the fact that it always compiles semantically equivalen
 - string values, e.g. `"string value"` `"foo"` `"bar"`
 - numeric values, e.g. `-1` `3.14`
 - numeric ranges, e.g. `< 2` `<= 3` `> 4` `>= 3`
-- obligatory record fields: `:`, e.g. `id:number` and `type:"click"`
-- optional record fields: `?:` e.g. `id?:number` and `type?:"click"`
+- obligatory record fields: `:`, e.g. `id: number` and `type: "click"`
+- optional record fields: `?:` e.g. `id?: number` and `type ?: "click"`
 - negation, intersection and union, `!` `&` `|`
 for example: `!null` `number & <3` and `"foo"|"bar"`
-- implication and equivalence: `->`, `<-`, `<->`,
-for example: `true -> boolean`, `string <- "foo"`, `boolean <-> true | false`
+- implication and equivalence: `->`, `<->`,
+for example: `true -> boolean`, `boolean <-> true | false`
 
 ### Operator Precedence
 
 Ess uses the usual mathematical operator precedence rules. 
-(TODO)
+Thus not binds stringer than and, binds stringer than or, binds stringer than implies,
+binds stronger than equivs: (`!`, `&`,  `|`, `->`, `<->`). 
+
 
 ### Some Examples
 
