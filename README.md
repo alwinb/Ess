@@ -26,8 +26,8 @@ for example: `true -> boolean`, `boolean <-> true | false`
 ### Operator Precedence
 
 Ess uses the usual mathematical operator precedence rules. 
-Thus not binds stringer than and, binds stringer than or, binds stringer than implies,
-binds stronger than equivs: (`!`, `&`,  `|`, `->`, `<->`). 
+Thus, 'not' binds stronger than 'and', binds stronger than 'or', binds stronger than 'implies',
+binds stronger than 'equivs': (`!`, `&`,  `|`, `->`, `<->`). 
 
 
 ### Some Examples
