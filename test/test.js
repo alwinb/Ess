@@ -1,8 +1,9 @@
+"use strict"
+
 // Test Ess
 
 const ess = require ('../src/')
 const ess_r = require ('../src/ess-core')
-const store = new ess_r.Store ()
 const log = console.log.bind (console)
 
 // Use tagscript for html generation
@@ -15,11 +16,15 @@ const { tag, end, Renderer, render, raw, Page } = require ('tagscript')
 //const _types = ['string', 'null', 'false', 'true', 'number']
 
 const samples =
-  [ null
-
+  [
+  , 'null'
+  , '1'
+  , 'string | "1"'
+  , '2'
+  , '2 & 1'
   , '3 & <4' 
   , 'name:"joe" & flag?:boolean'
-  , 'a:1 | b:1'
+  , 'a:1 | b:2'
   , 'a:>1 | b:<1'
   , 'type:"click" -> clientX:number & clientY:number'
   , null
@@ -100,13 +105,14 @@ function* map (fn, it) {
     yield fn (it)
 }
 
+const store = new ess_r.Store ()
 function exec (str) {
   if (str === null || str === undefined) 
     return [tag('hr', {style:'clear:both'})]
 
-  let tm = ess.parse (str, ess.desugar)
+  let tm = ess.internals.parse (str, ess.desugar)
   let x = store.eval (tm)
-  let svg = ess.toSvg (store.trace (x).heap)
+  let svg = ess.internals.toSvg (store.trace (x).heap)
   return box (wrap('code', str), tag('br'), raw(svg))
 }
 

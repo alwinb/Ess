@@ -12,7 +12,9 @@ module.exports = { parse, desugar }
 // (because it leaks implementation specifics)
 // and so I distinguish LTE and ILTE, the second
 // one being the 'internal one'.
-
+//
+//  [all numbers] < null < (others) < false < true < [all strings]
+//
 // number = ILT null
 // string = IGT true
 // boolean = IGTE false & ILTE true
@@ -45,6 +47,9 @@ function desugar (tuple) {
       var n = parseFloat (tuple[1], 10)
       return ['and', ['IGTE', n], ['ILTE', n]]
 
+    case 'string':
+      return ['and', ['IGTE', tuple[1]], ['ILTE', tuple[1]]]
+
     case 'value':
       if (tuple[1] === 'true')
         return ['and', ['IGTE', true], ['ILTE', true]]
@@ -55,36 +60,42 @@ function desugar (tuple) {
       if (tuple[1] === 'null')
         return ['and', ['IGTE', null], ['ILTE', null]]
 
-    case 'type':
-      switch (tuple[1]) {
-        case 'boolean': return ['and', ['IGTE', false], ['ILTE', true]]
-        case 'number': return ['IGT', true]
-        case 'string': return ['ILT', null]
-    }
-
-    case 'lt':
-      return ['and', ['ILT', tuple[1]], ['IGT', true]]
-
-    case 'lte':
-      return ['and', ['ILTE', tuple[1]], ['IGT', true]]
-
-   case 'gt':
-      return ['and', ['IGT', tuple[1]], ['IGT', true]]
-
-   case 'gte':
-      return ['and', ['IGTE', tuple[1]], ['IGT', true]]
+    // Evaluating strings
 
     case 'conc':
-      return tuple[1] + tuple[2] // Evaluating string concatenation
+      return tuple[1] + tuple[2]
 
-    case 'chars':
-      return tuple[1]
+    case 'chars': return tuple[1]
 
     case 'escape-sequence':
       return eval ('"'+tuple[1]+'"') // FIXME do this safely
 
-    case 'string':
-      return ['and', ['IGTE', tuple[1]], ['ILTE', tuple[1]]]
+    // Types, and comparisons on numbers
+    // These are 'desugared' to internal comparisons
+    // An this, is highly specific to the otherwise irrelevant 
+    // internal order on primitive types used; so be cautious. 
+    // (Should be encapsulated)
+
+    case 'type':
+      switch (tuple[1]) {
+        case 'boolean': return ['and', ['IGTE', false], ['ILTE', true]]
+        case 'number': return ['ILT', null]
+        case 'string': return ['IGT', true]
+    }
+
+    case 'lt':
+      return ['and', ['ILT', tuple[1]], ['ILT', null]]
+
+    case 'lte':
+      return ['and', ['ILTE', tuple[1]], ['ILT', null]]
+
+    case 'gt':
+      return ['and', ['IGT', tuple[1]], ['ILT', null]]
+
+    case 'gte':
+      return ['and', ['IGTE', tuple[1]], ['ILT', null]]
+
+
 
     default:
       return tuple

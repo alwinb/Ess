@@ -1,3 +1,4 @@
+"use strict"
 const log = console.log.bind (console)
   , Map = require ('../lib/aatree')
   , L = require ('../lib/layout')
@@ -42,6 +43,7 @@ const F = fn => fx => {
   : fx /* case for top, bot, ILTE etc */ }
 
 
+// Total order on F nodes
 // Given a total order on `X`, return a total order on `FX`. 
 
 const compareFNodesWith = cmp_x => (t1, t2) => {
@@ -56,10 +58,10 @@ const compareFNodesWith = cmp_x => (t1, t2) => {
   : c1 === BOX    ? cmp_js (x1, x2) || cmp_x (y1, y2)
   : c1 === DIAM   ? cmp_js (x1, x2) || cmp_x (y1, y2)
   : c1 in _twoary ? cmp_x  (x1, x2) || cmp_x (y1, y2)
-  : c1 === ILT    ? cmp_js (x1, x2)
-  : c1 === ILTE   ? cmp_js (x1, x2)
-  : c1 === IGT    ? cmp_js (x1, x2)
-  : c1 === IGTE   ? cmp_js (x1, x2)
+  : c1 === ILT    ? internalCompare (x1, x2)
+  : c1 === ILTE   ? internalCompare (x1, x2)
+  : c1 === IGT    ? internalCompare (x1, x2)
+  : c1 === IGTE   ? internalCompare (x1, x2)
   : undefined }
 
 
@@ -76,55 +78,55 @@ function cmpD (cmp_s, cmp_x) {
   return ([s1, x1], [s2, x2]) => (cmp_s (s1, s2) || cmp_x (x1, x2)) }
 
 
-
 // Using continuous ranges to represent Ess primitive types
 // --------------------------------------------------------
 // By imposing an order on primitive javascript values as follows:
 // 
-//  [all strings] < null < false < true < [all numbers]
+//  [all numbers] < null < (others) < false < true < [all strings]
 // 
-// This total order is implemented by the internalCompare function below,
-//  which assumes its arguments to be of type number, boolean, string, or value null. 
+// This total order is implemented by the internalCompare function below. 
 
-const _types = ['string', 'null', 'false', 'true', 'number']
+const [numType, nullType, otherType, falseType, trueType, stringType] = 
+  [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
-function internalType (a) {
+function typeof_ (a) {
   const t = typeof a
-  return t === 'number' ? 4
-    : t === 'string' ? 0
-    : a === false ? 2
-    : a === true ? 3
-    : a == null ? 1
-    : 1 //// or error. 
+  return t === 'string' ? stringType
+    : t === 'number' ? Number.isNaN (a) ? otherType : numType
+    : a === null ? nullType
+    : a === false ? falseType
+    : a === true ? trueType
+    : otherType
 }
 
-const internalCompare = (a, b) => {
-  const ta = internalType (a), tb = internalType (b)
+function internalCompare (a, b) {
+  const ta = typeof_ (a), tb = typeof_ (b)
   return ta < tb ? -1 : ta > tb ? 1
-    : (ta === 0 || ta === 4 ? (a < b ? -1 : a > b ? 1 : 0) : 0)
+    : (ta === numType || ta === stringType ? (a < b ? -1 : a > b ? 1 : 0) : 0)
 }
+
+// var a = [ true, false, {}, [], null, 'foo', { valueOf:() => 10}, 10, 22, 'a'].sort (internalCompare)
+// log(a)
 
 // ### Defining types as boolean combinations of delimiters on this order. 
 // For example:
 // number := < null
 // string := > true
-// null := > number && < false
+// null := > number && < undefined
 
 // So first, represent delimiters as tuples [above, value], [below, value]
 // nb. this is enough for representing the types, for example
 // number := [below null] and string := [above true]
 
 // To uniquely represent these delimiters, they need to be normalized. 
-// normalizing them as follows: 
-// above null => below false
+// which with the orfder above is simply done with
 // below true => above false
 
-const ABOVE = '≤'
-const BELOW = '<'
+const ABOVE = 'above' // '≤'
+const BELOW = 'below' // '<'
 
 function normalizeDelimiter ([tag, value]) {
-  return tag === ABOVE && value == null ? [BELOW, false]
-    : tag === BELOW && value === true ? [ABOVE, false]
+  return tag === BELOW && value === true ? [ABOVE, false]
     : [tag, value]
 }
 
@@ -242,7 +244,7 @@ function Store () {
 
   this.trace = x => traceG (out, x)
   this.build = (x) => buildG (out, x)
-  this.eval = eval
+  this.eval = evalEss
   this.apply = apply
 
   this.top = top
@@ -276,7 +278,7 @@ function Store () {
   // e.g. the AST of an ess expression
   // and evaluates it to (a reference to) an Ess-bdd. 
 
-  function eval (tm) {
+  function evalEss (tm) {
     return fold (F) (x => x, apply, tm)
   }
 
@@ -408,9 +410,9 @@ function run (dtree, input) {
 
     else if (op === TEST) {
       [d,t] = dtree [label] // [c, value], c being one of ≤ <
-      if (d === '<') // (ref < t)
+      if (d === BELOW) // (ref < t)
         dtree = internalCompare (ref, t) < 0 ? dtree [right] : dtree [left]
-      else // (ref ≤ t)
+      else // d === ABOVE  // (ref ≤ t)
         dtree = internalCompare (ref, t) <= 0 ? dtree [right] : dtree [left]
     }
 
@@ -512,4 +514,4 @@ function toSvg (heap) {
 }
 
 
-module.exports = { Store, drawG, toSvg, run, internalType, internalCompare }
+module.exports = { Store, drawG, toSvg, run, internalCompare }
