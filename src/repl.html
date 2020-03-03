@@ -22,7 +22,7 @@
 		stroke:black; }
 
 	text {
-		font-size:18.5;
+		font-size:16.5;
 		fill:black;
 		text-anchor:middle;
 		dominant-baseline:central;
@@ -68,24 +68,6 @@
 
 <div id="repl">
 </div>
-
-<!-- svg symbols for the nodes of the bdds -->
-<svg style="display:none">
-<defs id="desc">
-	<g id="test">
-		<circle class="node" cx="0" cy="0" r="12.8"/>
-	</g>
-	<g id="enter" transform="scale(.8)">
-		<rect class="node" x="-13.3" y="-13.3" width="26.6" height="26.6" transform="rotate(45)"/>
-		<g transform="rotate(45)">
-			<path class="enter-mark" d="M17.3 -13.3 l0 26.6" style="stroke-linecap:square"/> 
-		</g>
-	</g>
-	<g id="leave" transform="scale(.8)" style="stroke:black;fill:none">
-		<path class="leave-mark" d="M-13.3 0 l26.6 0" style="stroke-linecap:square"/> 
-	</g>
-</defs>
-</svg>
 
 <script>
 const log = console.log.bind (console)

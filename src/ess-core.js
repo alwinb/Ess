@@ -122,8 +122,8 @@ function internalCompare (a, b) {
 // which with the orfder above is simply done with
 // below true => above false
 
-const ABOVE = 'above' // '≤'
-const BELOW = 'below' // '<'
+const ABOVE = '≤' // 'above' // 
+const BELOW = '<' // 'below' // 
 
 function normalizeDelimiter ([tag, value]) {
   return tag === BELOW && value === true ? [ABOVE, false]
@@ -443,75 +443,74 @@ function rank (gx) {
   const [g, x, y, z] = gx 
   return g === LEAVE ? x + 1
     : g === RETURN ? 0
-    : g === TEST || g === ENTER || g === TYPE || g === VALUE ? Math.max (x, z) + 1
+    : g === TEST || g === ENTER ? Math.max (x, z) + 1
     : 0 }
 
 // To see what we are doing, it is useful to be able to draw G-nodes. 
 // Draws a G-node `n` containing points {x, y} at point `pt`. 
 
-// I want the dimensions to be added in here, and have it work.. like a recipie
-// also without having the subnode positions available. 
-// Something like... { width, height, shape,  }
-// Yes.. but I also want to specify HOW to draw the children..
-// which may be... shape, child, label, ...
-// Yes it should be a draw function simply, returning some pic-data together
-// with an origin, width, height, fo be placed by the positioning?
-// but then.. the arcs, remain problematic
-// hmmm 
-
-function drawG (canvas, pt, n) {
-  var C = canvas
-  var c = n[0]
-
-  if (c === TEST) {
-    C.circle ('node', pt, 12.8)
-    C.arc ('false', pt, -3/8, n[1])
-    C.label ('', n[2] , pt)
-    C.arc ('true' , pt,  3/8, n[3]) }
-
-  else if (c === ENTER) {
-    C.use ('enter', pt)
-    C.arc ('false', pt, -3/8, n[1])
-    C.label ('', n[2] , pt)
-    C.arc ('true' , pt,  3/8, n[3]) }
-
-  else if (c === LEAVE) {
-    C.hline ('node', pt, 36)
-    C.arc ('leave', pt, 1/2, n[1], .2, 0) } // from, angle, to, curvature, curvature offset
-
-  else if (c === RETURN) {
-    C.rect ('node', pt, 24, 19.2)
-    C.label ('return', n[1] ? '&#x22A4;' : '&#x22A5;', pt) }
-
-  else if (c === FAIL) {
-    C.rect ('node', pt, 24, 19.2)
-    C.label ('fail', 'X', pt) }
-
-}
-
-
-var dims = 
-{   'test': { width:55, height:45 }
-,   'type': { width:80, height:45 }
-,  'value': { width:80, height:45 }
-,  'enter': { width:55, height:45 }
-,  'leave': { width:55, height:3  }
-, 'return': { width:55, height:23 }
-,   'fail': { width:55, height:23 }
+function picFor (n) {
+  const c = n[0]
+  if (c === TEST) return {
+    width:55,
+    height:25,
+    depth:20,
+    class:c,
+    shape:'M0 -12.8 A1 1 0 1 1 0 12.8 A1 1 0 1 1 0 -12.8 z',
+    label:n[2],
+    arcs: [
+      { for:1, class:'false', dir:-4/12 },
+      { for:3, class:'true',  dir: 4/12 }
+    ],
+  }
+  if (c === ENTER) return {
+    width:120, // NB the origin is at 60
+    height:25,
+    depth:20,
+    class:c,
+    shape:'M-54 0 l 12 12 h84 l12 -12 l-12 -12 h-84zm114 0 l-18 18',
+    label:n[2],
+    arcs: [
+      { for:1, class:'false', from:{x:-48, y:6}, dir:-3/8 },
+      { for:3, class:'true',  from:{x: 48, y:6}, dir: 3/8 }
+    ],
+  }
+  if (c === LEAVE) return {
+    width:55,
+    height:8,
+    depth:8,
+    class:c,
+    shape:'M-18 0h36',
+    arcs: [
+      { for:1, class:'pop', dir:1/2 },
+      /// ('leave', pt, 1/2, n[1], .2, 0) } // from, angle, to, curvature, curvature offset
+    ],
+  }
+  if (c === RETURN) return {
+    width:75,
+    height:25,
+    depth:20,
+    class:c,
+    shape:'M-12 -9.6 h24 v19.2 h-24z',
+    label:n[1] ? '&#x22A4;' : '&#x22A5;',
+    arcs:[]
+  }
 }
 
 
 function toSvg (heap) {
-  var grouped  = L.group_by (G, (a,b) => cmp_js (b, a), rank, heap)
-  var metrics = L.layout2 (function(gx){ return dims[gx[0]] }, grouped, heap)
-    , ps = metrics.positions
-    , C = new L.Canvas (metrics)
-  function getPosition (x) { return ps[x] }
-  for (var i=0,l=heap.length; i<l;i++)
-    drawG (C, ps[i], G (getPosition) (heap[i]))
+  var grouped  = L.groupByRank (G, (a,b) => cmp_js (b, a), rank, heap)
+  return L.layout2 (picFor, grouped, heap).render ()
+}
 
-  return C.render ()
+function termToSvg (term) {
+  // so question is, what needs to change ?
+  // if we do not have a 'heap'
+  // For general purpose, it is appropriate to use the ES WeakMap
+  // hum.. so yeah and then the groupBy does what? 
+  // The corank one is easiest
 }
 
 
-module.exports = { Store, drawG, toSvg, run, internalCompare }
+
+module.exports = { Store, toSvg, run, internalCompare }
