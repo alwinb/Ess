@@ -1,5 +1,4 @@
-Ess Expression Language
-====================
+# Ess Expression Language
 
 Ess is an expression language for describing properties of JSON records. 
 It has a nice mathematical structure, supporting the boolean algebra operations and optional and required record fields on top of primitive types, primitive values and numeric ranges. 
@@ -8,7 +7,7 @@ The Ess compiler can be used as a theorem prover for the Ess language.
 This is a consequence of the fact that it always compiles semantically equivalent expressions to the same end result, so that checking equivalence of two expressions becomes the same thing as checking equality of their compilations. 
 
 
-# Syntax
+## Syntax
 
 ### Basics
 - primitive types: `boolean` `number` `string`
@@ -26,8 +25,7 @@ for example: `true -> boolean`, `boolean <-> true | false`
 ### Operator Precedence
 
 Ess uses the usual mathematical operator precedence rules. 
-Thus, 'not' binds stronger than 'and', binds stronger than 'or', binds stronger than 'implies',
-binds stronger than 'equivs': (`!`, `&`,  `|`, `->`, `<->`). 
+The record field operators `:` and `?:` bind strongest, so that `id: number | null` is parsed as  `(id: number) | null`. From there, 'not' binds stronger than 'and', binds stronger than 'or', binds stronger than 'implies', binds stronger than 'equivs': (`:`, `?:`, `!`, `&`,  `|`, `->`, `<->`). 
 
 
 ### Some Examples
@@ -41,8 +39,8 @@ binds stronger than 'equivs': (`!`, `&`,  `|`, `->`, `<->`).
 Note that in Ess, optional record fields are not the same as nullable record fields. 
 
 - `id?: number`: does not match `{id:null}` but does match `{}` and `{id:1}`. 
-- `id: number|null` does not match `{}` but does match `{id:null}` and `{id:1}`. 
-- `id?: number|null`: matches all of `{}`, `{id:null}` and `{id:1}`. 
+- `id: (number | null)` does not match `{}` but does match `{id:null}` and `{id:1}`. 
+- `id?: (number | null)`: matches all of `{}`, `{id:null}` and `{id:1}`. 
 
 
 ## Using Ess from javascript:
