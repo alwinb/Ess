@@ -497,20 +497,12 @@ function picFor (n) {
   }
 }
 
+function picFor_ (heap) { return i => picFor (heap[i]) }
 
 function toSvg (heap) {
-  var grouped  = L.groupByRank (G, (a,b) => cmp_js (b, a), rank, heap)
-  return L.layout2 (picFor, grouped, heap).render ()
+  var layers = L.groupByRank (G, (a,b) => cmp_js (b,a), rank, heap)
+  return L.layout2 (layers, picFor_(heap), (x,k) => heap[x][k]).render ()
 }
-
-function termToSvg (term) {
-  // so question is, what needs to change ?
-  // if we do not have a 'heap'
-  // For general purpose, it is appropriate to use the ES WeakMap
-  // hum.. so yeah and then the groupBy does what? 
-  // The corank one is easiest
-}
-
 
 
 module.exports = { Store, toSvg, run, internalCompare }
