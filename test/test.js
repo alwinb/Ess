@@ -2,9 +2,9 @@
 
 // Test Ess
 
-const ess = require ('../src/')
-const ess_r = require ('../src/ess-core')
+const { core } = require ('../src/')
 const log = console.log.bind (console)
+const samples = require ('./samples')
 
 // Use tagscript for html generation
 
@@ -15,79 +15,6 @@ const { tag, end, Renderer, render, raw, Page } = require ('tagscript')
 
 //const _types = ['string', 'null', 'false', 'true', 'number']
 
-const samples =
-  [
-  , 'null'
-  , '1'
-  , 'string | "1"'
-  , '2'
-  , '2 & 1'
-  , '3 & <4' 
-  , 'name:"joe" & flag?:boolean'
-  , 'a:1 | b:2'
-  , 'a:>1 | b:<1'
-  , 'type:"click" -> clientX:number & clientY:number'
-  , null
-
-  , '<1 & <2'
-  , '<2 & <1'
-  , '<1 | <2'
-  , '<2 | <1'
-  , '<1 & <2 & <3'
-  , '<1 | <2 | <3'
-  , '<1'
-  , '<3'
-  , '<=3'
-  , '>3'
-  , '>=3'
-  , '3'
-  , '>10 & <20'
-  , '<1 & >2'
-  , '<3 | >=3'
-  , null
-
-  , 'number'
-  , '!string'
-  , '!number'
-  , 'number | !number'
-  , 'number & string'
-  , 'number & !string'
-  , 'number & !string <-> number'
-  , '!number & !string'
-  , 'number | string'
-  , 'number | !string'
-  , 'number | !string <-> !string'
-  , '!number | !string'
-  , 'boolean & number'
-  , 'boolean'
-  , 'boolean | number'
-  , 'number & boolean'
-  , 'string | (number & boolean)'
-  , 'boolean'
-  , '!boolean'
-  , 'false'
-  , 'true'
-  , 'true | false'
-  , 'true | boolean'
-  , 'boolean & !(true | false)'
-  , '!true | !false'
-  , null
-
-  , '"joe"'
-  , '"joe" & "fred"'
-  , '"joe" | "fred"'
-  , '!"joe" & !"fred"'
-  , '!"joe" | !"fred"'
-  , null
-
-  , '"joe" & string'
-  , '"joe" & !string'
-  , '"joe" | string'
-  , '!"joe" & string'
-  , '!"joe" & !string'
-  , null
-
-  ]
 
 ///
 
@@ -105,14 +32,14 @@ function* map (fn, it) {
     yield fn (it)
 }
 
-const store = new ess_r.Store ()
+const store = new core.Store ()
 function exec (str) {
   if (str === null || str === undefined) 
     return [tag('hr', {style:'clear:both'})]
 
-  let tm = ess.internals.parse (str, ess.desugar)
+  let tm = core.parse (str)
   let x = store.eval (tm)
-  let svg = ess.internals.toSvg (store.trace (x).heap)
+  let svg = core.toSvg (store.trace (x).heap)
   return box (wrap('code', str), tag('br'), raw(svg))
 }
 
@@ -121,4 +48,6 @@ const p = new Page ('Test Ess')
   .withBody (samples.map (exec))
 
 log (render (p))
-process.exit (205)
+
+
+//process.exit (205)

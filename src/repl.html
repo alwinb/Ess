@@ -73,7 +73,7 @@
 const log = console.log.bind (console)
   
 function main () {
-  const store = new EssExp.internals.Store ()
+  let store = new Ess.core.Store ()
 	repl = new Repl (document.getElementById('repl'), _eval)
 	  .exec ('name:"joe" & flag?:boolean')
 	  .exec ('number | string')
@@ -85,12 +85,12 @@ function main () {
 
   function _eval (input) {
 		if (input === '.clear') {
-			store = new EssExp.internals.Store ()
+			store = new Ess.core.Store ()
 			return window.setTimeout (repl.clear, 0)
 		}
 		else try {
-			var tm = EssExp.internals.parse (input)
-			var svg = EssExp.internals.toSvg (store.trace (store.eval(tm)) .heap)
+			var tm = Ess.core.parse (input)
+			var svg = Ess.core.toSvg (store.trace (store.eval(tm)) .heap)
 			return { type:'html_raw', value:svg }
 		} catch (e) {
 			//throw e

@@ -1,1 +1,1 @@
-window.EssExp = require ('./')
+window.Ess = require ('./')

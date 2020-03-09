@@ -136,11 +136,3 @@ function tokenInfo ([type, value]) {
 function parse (sample, alg = desugar) {
   return _parse (sample, tokenize, tokenInfo, alg)
 }
-
-/*
-var str = '"foo\\nbar\\nbaz"'
-var str = 'foo:true & bar:false & (true|false) | "foo"'
-var tree = parse (str)
-log (str)
-log(JSON.stringify(tree, null,2))
-//*/
