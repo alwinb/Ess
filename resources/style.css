@@ -1,28 +1,24 @@
 
 /** SVG diagrams */
 
-path, .node {
-	fill:none;
-	stroke:black;
-	stroke-width:1; }	
+    text { font-size:11px }
+    path, rect {fill:none;stroke:black;}
+    rect { stroke:#0962;}
+    text {text-anchor:middle;fill:black;}
+    path.node {fill:#fffd;}
+    svg { border:1px solid black; display:block;padding:1rem;}
 
 path.false {
 	stroke-dasharray:3,3; }
-
-.node {
-	fill:white;
-	stroke:black; }
 
 text {
 	font-size:16.5;
 	fill:black;
 	text-anchor:middle;
-	dominant-baseline:central;
 	font-style:italic; }
 
 text.return, text.type {
 	font-size:14.8;
-	dominant-baseline:central;
 	font-style:normal;
 }
 

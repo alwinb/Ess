@@ -4,7 +4,7 @@ const { tokenize } = require  ('./lexer')
 const { TokenClasses, parse:_parse } = require ('ab-parse')
 const T = TokenClasses
 
-module.exports = { parse, desugar }
+module.exports = { parse, desugar, coalesce }
 
 // Assuming the ordering of primitives as (elsewhere)
 // The primitve types can be desugared as follows,
@@ -25,7 +25,52 @@ module.exports = { parse, desugar }
 // >3 = IGT 3 && ILT null
 // "foo" = IGTE "foo" & ILTE "foo"
 
-// Desugared Terms are trees of nodes TOP BOT AND OR NOT THEN WHEN IFF (ILT v) (IGT v) (ILTE v) (IGTE v)
+// Raw parse trees are of nodes ... TOP BOT AND OR NOT THEN IFF DIAM BOX GROUP .....
+// Desugared Terms are trees of nodes TOP BOT AND OR NOT THEN DIAM BOX IFF (ILT v) (IGT v) (ILTE v) (IGTE v)
+
+function coalesce (tuple) {
+  var op = tuple[0]
+  switch (op) {
+
+    case 'op': // 'top': case 'bot':
+      return [tuple[1]]
+
+    case 'diam': case 'box':
+      return [op, tuple[1], tuple[2]]
+
+    case 'group':
+      return tuple[1]
+
+    case 'bound':
+      var n = parseFloat (tuple[1], 10)
+      return n
+
+    case 'symbol':
+      return tuple[1]
+
+    case 'number':
+      var n = parseFloat (tuple[1], 10)
+      return ['value', n]
+
+    case 'string':
+      return ['value', tuple[1]]
+
+
+    // Evaluating strings
+
+    case 'conc':
+      return tuple[1] + tuple[2]
+
+    case 'chars': return tuple[1]
+
+    case 'escaped':
+      return eval ('"'+tuple[1]+'"') // FIXME do this safely
+
+    default:
+      return tuple
+  }
+}
+
 
 function desugar (tuple) {
   var op = tuple[0]
@@ -40,7 +85,7 @@ function desugar (tuple) {
     case 'group':
       return tuple[1]
 
-    case 'number_ineq':
+    case 'bound':
       return parseFloat (tuple[1], 10)
 
     case 'number':
@@ -67,7 +112,7 @@ function desugar (tuple) {
 
     case 'chars': return tuple[1]
 
-    case 'escape-sequence':
+    case 'escaped':
       return eval ('"'+tuple[1]+'"') // FIXME do this safely
 
     // Types, and comparisons on numbers

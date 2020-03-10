@@ -13,6 +13,12 @@ TM_RUN_TARGET = "${TM_PROJECT_DIRECTORY}/test/parser.test.js"
 [src/index.js]
 TM_RUN_TARGET = "${TM_PROJECT_DIRECTORY}/test/index.test.js"
 
+[src/ess-core.js]
+TM_RUN_TARGET = "${TM_PROJECT_DIRECTORY}/test/test.js"
+TM_EXIT_CODE = 205
+
 [test/test.js]
 TM_EXIT_CODE = 205
 
+[test/parser.test.js]
+TM_EXIT_CODE = 205

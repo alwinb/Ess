@@ -458,7 +458,7 @@ function picFor (n) {
     class:c,
     shape:'M0 -12.8 A1 1 0 1 1 0 12.8 A1 1 0 1 1 0 -12.8 z',
     label:n[2],
-    arcs: [
+    anchors: [
       { for:1, class:'false', dir:-4/12 },
       { for:3, class:'true',  dir: 4/12 }
     ],
@@ -468,9 +468,9 @@ function picFor (n) {
     height:25,
     depth:20,
     class:c,
-    shape:'M-54 0 l 12 12 h84 l12 -12 l-12 -12 h-84zm114 0 l-18 18',
+    shape:'M0 -5 m-54 0 l 12 12 h84 l12 -12 l-12 -12 h-84zm114 0 l-18 18',
     label:n[2],
-    arcs: [
+    anchors: [
       { for:1, class:'false', from:{x:-48, y:6}, dir:-3/8 },
       { for:3, class:'true',  from:{x: 48, y:6}, dir: 3/8 }
     ],
@@ -480,8 +480,8 @@ function picFor (n) {
     height:8,
     depth:8,
     class:c,
-    shape:'M-18 0h36',
-    arcs: [
+    shape:'m-18 -4h36',
+    anchors: [
       { for:1, class:'pop', dir:1/2 },
       /// ('leave', pt, 1/2, n[1], .2, 0) } // from, angle, to, curvature, curvature offset
     ],
@@ -491,9 +491,9 @@ function picFor (n) {
     height:25,
     depth:20,
     class:c,
-    shape:'M-12 -9.6 h24 v19.2 h-24z',
+    shape:'M-12 -14 h24 v19.2 h-24z',
     label:n[1] ? '&#x22A4;' : '&#x22A5;',
-    arcs:[]
+    anchors:[]
   }
 }
 
