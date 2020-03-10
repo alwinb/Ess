@@ -1,5 +1,7 @@
 const samples =
   [
+  , 'any'
+  , 'bottom'
   , 'null'
   , '1'
   , 'string | "1"'

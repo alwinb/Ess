@@ -1,7 +1,6 @@
 const { EssExp, ess, core } = require ('../src/')
 const { parse, Store, compile } = core
 const log = console.log.bind (console)
-const json = x => JSON.stringify (x, null, 2)
 
 // var e = ess `type:"click" -> clientX:number & clientY:number`
 // log (e.test ({ type:'click', clientX:1, clientY:1 }))

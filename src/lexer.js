@@ -17,7 +17,7 @@ const
 ,    int = raw `(?:-?(?:0|[1-9][0-9]*))`
 , number = raw  `${int}${frac}?${exp}?`
 ,  modal = raw `\?:|\:`
-,  tobot = raw `any\b|void\b`
+,  tobot = raw `any\b|bottom\b`
 ,    ops = raw `[()[\]|&!]|<->|->`
 ,    cmp = raw `<=|<|>=|>`
 

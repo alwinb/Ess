@@ -1,4 +1,3 @@
-"use strict"
 const log = console.log.bind (console)
 const { tokenize } = require  ('./lexer')
 const { TokenClasses, parse:_parse } = require ('ab-parse')
@@ -24,9 +23,6 @@ module.exports = { parse, desugar, coalesce }
 // 3 = IGTE 3 & ILTE 3
 // >3 = IGT 3 && ILT null
 // "foo" = IGTE "foo" & ILTE "foo"
-
-// Raw parse trees are of nodes ... TOP BOT AND OR NOT THEN IFF DIAM BOX GROUP .....
-// Desugared Terms are trees of nodes TOP BOT AND OR NOT THEN DIAM BOX IFF (ILT v) (IGT v) (ILTE v) (IGTE v)
 
 function coalesce (tuple) {
   var op = tuple[0]
@@ -149,25 +145,25 @@ function desugar (tuple) {
 
 
 const optable =
-{   '!': [    'not', T.PREFIX, 1]
-,   ':': [   'diam', T.INFIXR, 0]
-,  '?:': [    'box', T.INFIXR, 0]
-,   '&': [    'and', T.INFIXL, 2]
-,   '|': [     'or', T.INFIXL, 3]
-,  '->': [   'then', T.INFIXR, 4]
-,  '<-': [   'when', T.INFIXL, 4] // Not used
-, '<->': [    'iff', T.INFIX , 5]
-,   '>': [     'gt', T.PREFIX, 0]
-,  '>=': [    'gte', T.PREFIX, 0]
-,   '<': [     'lt', T.PREFIX, 0]
-,  '<=': [    'lte', T.PREFIX, 0]
-, 'any': [    'top', T.LEAF     ]
-,'void': [    'bot', T.LEAF     ]
-,   '(': [  'group', T.BEGIN    ]
-,   ')': [  'group', T.END      ]
-,   '"': [ 'string', T.BEGIN    ]
-,   '"': [ 'string', T.END      ]
-,    '': [   'conc', T.INFIXR, 0] // string-concat
+{     '!': [    'not', T.PREFIX, 1]
+,     ':': [   'diam', T.INFIXR, 0]
+,    '?:': [    'box', T.INFIXR, 0]
+,     '&': [    'and', T.INFIXL, 2]
+,     '|': [     'or', T.INFIXL, 3]
+,    '->': [   'then', T.INFIXR, 4]
+,    '<-': [   'when', T.INFIXL, 4] // Not used
+,   '<->': [    'iff', T.INFIX , 5]
+,     '>': [     'gt', T.PREFIX, 0]
+,    '>=': [    'gte', T.PREFIX, 0]
+,     '<': [     'lt', T.PREFIX, 0]
+,    '<=': [    'lte', T.PREFIX, 0]
+,   'any': [    'top', T.LEAF     ]
+,'bottom': [    'bot', T.LEAF     ]
+,     '(': [  'group', T.BEGIN    ]
+,     ')': [  'group', T.END      ]
+,     '"': [ 'string', T.BEGIN    ]
+,     '"': [ 'string', T.END      ]
+,      '': [   'conc', T.INFIXR, 0] // string-concat
 }
 
 function tokenInfo ([type, value]) {

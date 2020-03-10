@@ -7,8 +7,6 @@ const {
   createFunctor, createRankFunction,
   createImageFunction, } = require ('../src/signatures')
 
-const samples = require ('./samples')
-
 const log = console.log.bind (console)
 
 const compareJs = (t1, t2) =>
@@ -76,7 +74,7 @@ const style =
     text-align:center;
     background:#eee;
     border-radius:4px;
-    padding:3px 1px;
+    padding:3px 2px;
     margin-bottom:1em;
     border:1px solid #ccc;
   }
@@ -103,18 +101,16 @@ const style =
 
 
 function main (samples) {
-
   log (style)
-
   samples
-    .filter (x => x != null)
-    .map (x => {
-      log ('<div class=box>\n<code class=input>', x, '</code>')
-      log (toSvg (parse (x, preEval)))
+    .filter (sample => sample != null)
+    .forEach (sample => {
+      log ('<div class=box>\n<code class=input>', sample, '</code>')
+      log (toSvg (parse (sample, preEval)))
       log ('</div>')
     })
-
 }
 
-
+const samples = require ('./samples')
 main (samples)
+

@@ -1,4 +1,4 @@
-const json = x => JSON.stringify (x, null, 2)
+const util = require ('util')
 const log = console.log.bind (console)
 
 // Signatures
@@ -16,7 +16,7 @@ const log = console.log.bind (console)
 // by the lexer (and parser). 
 
 const RawTerms = {
-  top:     [],
+  any:     [],
   bottom:  [],
   and:     [0, 0],
   or:      [0, 0],
@@ -52,7 +52,7 @@ const RawTerms = {
 // numeric bounds. 
 
 const Terms = {
-  top:    [],
+  any:    [],
   bottom: [],
   and:    [0, 0],
   or:     [0, 0],
@@ -121,7 +121,7 @@ const createImageFunction = signature => node => {
   const CHAR_WIDTH = 8 // TODO
   
   let label = createFunctor (signature) ($ => undefined) (node)
-  label = [label[0], ...label.slice (1) .map ($ => $ === undefined ? '' : json ($))] .join (' ')
+  label = [label[0], ...label.slice (1) .map ($ => $ === undefined ? '' : util.inspect ($))] .join (' ')
   
   const width = label.length * CHAR_WIDTH
   const anchors = [], items = signature[node[0]]

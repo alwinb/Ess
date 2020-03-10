@@ -19,8 +19,8 @@ const  AND = 'and'  // and x x
     , WHEN = 'when' // when x x
     ,  IFF = 'iff'  // iff x x 
     ,  NOT = 'not'  // not x
-    ,  TOP = 'top'  // top
-    ,  BOT = 'bot'  // bot
+    ,  TOP = 'any'  // top
+    ,  BOT = 'bottom'  // bot
     ,  BOX = 'box'  // box m x
     , DIAM = 'diam' // diam m x
     , RAISE = 'raise' // raise x // nonstandard, a hack. 
@@ -453,32 +453,35 @@ function picFor (n) {
   const c = n[0]
   if (c === TEST) return {
     width:55,
-    height:25,
-    depth:20,
+    height:30,
+    depth:15,
     class:c,
-    shape:'M0 -12.8 A1 1 0 1 1 0 12.8 A1 1 0 1 1 0 -12.8 z',
+    anchor: {x:0, y:-18},
+    shape:'M 0 -6 m 0 -12.8 a1 1 0 1 1 0 25.6 a1 1 0 1 1 0 -25.6 z',
     label:n[2],
     anchors: [
-      { for:1, class:'false', dir:-4/12 },
-      { for:3, class:'true',  dir: 4/12 }
+      { for:1, class:'false', dir:-4/12, from: {x:-12, y:0 }, bend:1 },
+      { for:3, class:'true',  dir: 4/12, from: {x: 12, y:0 }, bend:1 }
     ],
   }
   if (c === ENTER) return {
     width:120, // NB the origin is at 60
     height:25,
     depth:20,
+    anchor: {x:0, y:-18},
     class:c,
     shape:'M0 -5 m-54 0 l 12 12 h84 l12 -12 l-12 -12 h-84zm114 0 l-18 18',
     label:n[2],
     anchors: [
-      { for:1, class:'false', from:{x:-48, y:6}, dir:-3/8 },
-      { for:3, class:'true',  from:{x: 48, y:6}, dir: 3/8 }
+      { for:1, class:'false', from:{x:-48, y:0}, dir:-3/8 },
+      { for:3, class:'true',  from:{x: 48, y:0}, dir: 3/8 }
     ],
   }
   if (c === LEAVE) return {
     width:55,
     height:8,
-    depth:8,
+    depth:10,
+    anchor: {x:0, y:-4},
     class:c,
     shape:'m-18 -4h36',
     anchors: [
@@ -489,9 +492,10 @@ function picFor (n) {
   if (c === RETURN) return {
     width:75,
     height:25,
-    depth:20,
+    depth:22,
     class:c,
-    shape:'M-12 -14 h24 v19.2 h-24z',
+    anchor: {x:0, y:-15},
+    shape:'M-12.5 -15 h24 v19 h-24z',
     label:n[1] ? '&#x22A4;' : '&#x22A5;',
     anchors:[]
   }
