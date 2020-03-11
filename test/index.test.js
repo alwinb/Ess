@@ -24,3 +24,5 @@ var s = new Store
 compile ('null', s)
 log (s.heap)
 
+
+log (ess `name?:any & 1` .test (1))

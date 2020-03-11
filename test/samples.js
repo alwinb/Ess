@@ -2,10 +2,19 @@ const samples =
   [
   , 'any'
   , 'bottom'
-  , 'null'
   , '1'
-  , 'string | "1"'
   , '2'
+  , 'true'
+  , 'false'
+  , 'null'
+  , 'number'
+  , 'string'
+  , 'boolean'
+  , null
+  , '1 & name:any' // Question... should this not rather be equivalent to bottom ?
+
+  , null
+  , 'string | "1"'
   , '2 & 1'
   , '3 & <4' 
   , 'name:"joe" & flag?:boolean'
