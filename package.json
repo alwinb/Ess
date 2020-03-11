@@ -9,9 +9,6 @@
   "dependencies": {
     "ab-parse": "^0.1.0"
   },
-  "devDependencies": {
-    "tagscript": "^0.3.0"
-  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

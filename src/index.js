@@ -1,20 +1,30 @@
-"use strict"
-
 // The Ess Schema Language
 // =======================
 
-const { parse } = require ('./parser')
+const { parse, desugar } = require ('./parser')
 const { Store, toSvg, run } = require ('./ess-core.js')
-const log = console.log.bind (console)
-const json = x => JSON.stringify (x, null, 2)
 
 function EssExp (string) {
-  const {id, dtree} = compile (string)
+  const { id, dtree } = compile (string)
   const isTop = id === 1
   const isBottom = id === 0
-  const test = input => run (dtree, input)
-  return { source:string, isTop, isBottom, test }
+
+  const test = input =>
+    run (dtree, input)
+
+  const assert = input => {
+    if (!run (dtree, input))
+      throw new Error ('ess.assert `'+string+'` failed')
+  }
+
+  return { source:string, isTop, isBottom, test, assert }
 }
+
+const ess = (...args) =>
+  new EssExp (String.raw (...args))
+
+ess.assert = (...args) =>
+  new EssExp (String.raw (...args)).assert
 
 function compile (string, store = new Store ()) {
   let tm = parse (string)
@@ -26,30 +36,5 @@ function compile (string, store = new Store ()) {
 // Exports
 // -------
 
-EssExp.internals = { parse, Store, toSvg }
-EssExp.EssExp = EssExp
-EssExp.ess = (...args) => new EssExp (String.raw(...args)).test
-module.exports = EssExp
 
-
-/*
-// var e = EssExp ('type:"click" -> clientX:number & clientY:number')
-// log (e.test ({ type:'click', clientX:1, clientY:1 }))
-// e.test ({})
-// e.test ({ })
-// e.test ({ type:'click'})
-
-var r
-var e = EssExp ('1')
-r = e.test (NaN)
-log (r)
-
-var e = EssExp ('null')
-r = parse ('number')
-r = e.test (NaN)
-log (r)
-
-var s = new Store 
-compile ('null', s)
-log (s.heap)
-//*/
+module.exports = { EssExp, ess, core: { parse, desugar, Store, toSvg, compile } }

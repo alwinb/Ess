@@ -9,38 +9,50 @@
 
 	/** svg styles for the bdds */
 
-	path, .node {
-		fill:none;
-		stroke:black;
-		stroke-width:1; }	
-
-	path.false {
-		stroke-dasharray:3,3; }
-
-	.node {
-		fill:white;
-		stroke:black; }
-
-	text {
-		font-size:18.5;
-		fill:black;
-		text-anchor:middle;
-		dominant-baseline:central;
-		font-style:italic; }
-
-	text.return, text.type {
-		font-size:14.8;
-		dominant-baseline:central;
-		font-style:normal;
-	}
-
-  text.type {
-		font-family:monospace;
+  .box {
+    border:1px solid black;
+    padding:.5em;
+    margin:0 -1px -1px 0;
+    margin:2px 0 1rem;
+    display:inline-block;
+    vertical-align:top;
   }
-
-	#top text, #bot text {
-		font-style:normal; }
-
+  .box .input {
+    display:block;
+    align:auto 0;
+    text-align:center;
+    background:#eee;
+    border-radius:4px;
+    padding:3px .5em;
+    margin-bottom:1em;
+    border:1px solid #ccc;
+  }
+  text {
+  	font-size:16.5;
+  	fill:black;
+  	text-anchor:middle;
+  	font-style:italic;
+  }
+  text.return {
+    font-style:normal;
+  }
+  path, rect {
+    fill:none;
+    stroke:black;
+  }
+  rect {
+    stroke:none; /*#0962;*/
+  }
+  text {
+    text-anchor:middle;
+    fill:black;
+  }
+  path.node {
+    fill:#fff6;
+  }
+  path.false {
+	stroke-dasharray:3,3;
+  }
 
 	/** repl styles */
 
@@ -69,29 +81,11 @@
 <div id="repl">
 </div>
 
-<!-- svg symbols for the nodes of the bdds -->
-<svg style="display:none">
-<defs id="desc">
-	<g id="test">
-		<circle class="node" cx="0" cy="0" r="12.8"/>
-	</g>
-	<g id="enter" transform="scale(.8)">
-		<rect class="node" x="-13.3" y="-13.3" width="26.6" height="26.6" transform="rotate(45)"/>
-		<g transform="rotate(45)">
-			<path class="enter-mark" d="M17.3 -13.3 l0 26.6" style="stroke-linecap:square"/> 
-		</g>
-	</g>
-	<g id="leave" transform="scale(.8)" style="stroke:black;fill:none">
-		<path class="leave-mark" d="M-13.3 0 l26.6 0" style="stroke-linecap:square"/> 
-	</g>
-</defs>
-</svg>
-
 <script>
 const log = console.log.bind (console)
   
 function main () {
-  const store = new EssExp.internals.Store ()
+  let store = new Ess.core.Store ()
 	repl = new Repl (document.getElementById('repl'), _eval)
 	  .exec ('name:"joe" & flag?:boolean')
 	  .exec ('number | string')
@@ -103,12 +97,12 @@ function main () {
 
   function _eval (input) {
 		if (input === '.clear') {
-			store = new EssExp.internals.Store ()
+			store = new Ess.core.Store ()
 			return window.setTimeout (repl.clear, 0)
 		}
 		else try {
-			var tm = EssExp.internals.parse (input)
-			var svg = EssExp.internals.toSvg (store.trace (store.eval(tm)) .heap)
+			var tm = Ess.core.parse (input)
+			var svg = Ess.core.toSvg (store.trace (store.eval(tm)) .heap)
 			return { type:'html_raw', value:svg }
 		} catch (e) {
 			//throw e

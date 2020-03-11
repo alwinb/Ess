@@ -1,10 +1,9 @@
-"use strict"
 const log = console.log.bind (console)
 const { tokenize } = require  ('./lexer')
 const { TokenClasses, parse:_parse } = require ('ab-parse')
 const T = TokenClasses
 
-module.exports = { parse, desugar }
+module.exports = { parse, desugar, coalesce }
 
 // Assuming the ordering of primitives as (elsewhere)
 // The primitve types can be desugared as follows,
@@ -25,7 +24,49 @@ module.exports = { parse, desugar }
 // >3 = IGT 3 && ILT null
 // "foo" = IGTE "foo" & ILTE "foo"
 
-// Desugared Terms are trees of nodes TOP BOT AND OR NOT THEN WHEN IFF (ILT v) (IGT v) (ILTE v) (IGTE v)
+function coalesce (tuple) {
+  var op = tuple[0]
+  switch (op) {
+
+    case 'op': // 'top': case 'bot':
+      return [tuple[1]]
+
+    case 'diam': case 'box':
+      return [op, tuple[1], tuple[2]]
+
+    case 'group':
+      return tuple[1]
+
+    case 'bound':
+      var n = parseFloat (tuple[1], 10)
+      return n
+
+    case 'symbol':
+      return tuple[1]
+
+    case 'number':
+      var n = parseFloat (tuple[1], 10)
+      return ['value', n]
+
+    case 'string':
+      return ['value', tuple[1]]
+
+
+    // Evaluating strings
+
+    case 'conc':
+      return tuple[1] + tuple[2]
+
+    case 'chars': return tuple[1]
+
+    case 'escaped':
+      return eval ('"'+tuple[1]+'"') // FIXME do this safely
+
+    default:
+      return tuple
+  }
+}
+
 
 function desugar (tuple) {
   var op = tuple[0]
@@ -40,7 +81,7 @@ function desugar (tuple) {
     case 'group':
       return tuple[1]
 
-    case 'number_ineq':
+    case 'bound':
       return parseFloat (tuple[1], 10)
 
     case 'number':
@@ -67,7 +108,7 @@ function desugar (tuple) {
 
     case 'chars': return tuple[1]
 
-    case 'escape-sequence':
+    case 'escaped':
       return eval ('"'+tuple[1]+'"') // FIXME do this safely
 
     // Types, and comparisons on numbers
@@ -104,25 +145,25 @@ function desugar (tuple) {
 
 
 const optable =
-{   '!': [    'not', T.PREFIX, 1]
-,   ':': [   'diam', T.INFIXR, 0]
-,  '?:': [    'box', T.INFIXR, 0]
-,   '&': [    'and', T.INFIXL, 2]
-,   '|': [     'or', T.INFIXL, 3]
-,  '->': [   'then', T.INFIXR, 4]
-,  '<-': [   'when', T.INFIXL, 4] // Not used
-, '<->': [    'iff', T.INFIX , 5]
-,   '>': [     'gt', T.PREFIX, 0]
-,  '>=': [    'gte', T.PREFIX, 0]
-,   '<': [     'lt', T.PREFIX, 0]
-,  '<=': [    'lte', T.PREFIX, 0]
-, 'any': [    'top', T.LEAF     ]
-,'void': [    'bot', T.LEAF     ]
-,   '(': [  'group', T.BEGIN    ]
-,   ')': [  'group', T.END      ]
-,   '"': [ 'string', T.BEGIN    ]
-,   '"': [ 'string', T.END      ]
-,    '': [   'conc', T.INFIXR, 0] // string-concat
+{     '!': [    'not', T.PREFIX, 1]
+,     ':': [   'diam', T.INFIXR, 0]
+,    '?:': [    'box', T.INFIXR, 0]
+,     '&': [    'and', T.INFIXL, 2]
+,     '|': [     'or', T.INFIXL, 3]
+,    '->': [   'then', T.INFIXR, 4]
+,    '<-': [   'when', T.INFIXL, 4] // Not used
+,   '<->': [    'iff', T.INFIX , 5]
+,     '>': [     'gt', T.PREFIX, 0]
+,    '>=': [    'gte', T.PREFIX, 0]
+,     '<': [     'lt', T.PREFIX, 0]
+,    '<=': [    'lte', T.PREFIX, 0]
+,   'any': [    'top', T.LEAF     ]
+,'bottom': [    'bot', T.LEAF     ]
+,     '(': [  'group', T.BEGIN    ]
+,     ')': [  'group', T.END      ]
+,     '"': [ 'string', T.BEGIN    ]
+,     '"': [ 'string', T.END      ]
+,      '': [   'conc', T.INFIXR, 0] // string-concat
 }
 
 function tokenInfo ([type, value]) {
@@ -136,11 +177,3 @@ function tokenInfo ([type, value]) {
 function parse (sample, alg = desugar) {
   return _parse (sample, tokenize, tokenInfo, alg)
 }
-
-/*
-var str = '"foo\\nbar\\nbaz"'
-var str = 'foo:true & bar:false & (true|false) | "foo"'
-var tree = parse (str)
-log (str)
-log(JSON.stringify(tree, null,2))
-//*/

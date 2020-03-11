@@ -17,7 +17,7 @@ const
 ,    int = raw `(?:-?(?:0|[1-9][0-9]*))`
 , number = raw  `${int}${frac}?${exp}?`
 ,  modal = raw `\?:|\:`
-,  tobot = raw `any\b|void\b`
+,  tobot = raw `any\b|bottom\b`
 ,    ops = raw `[()[\]|&!]|<->|->`
 ,    cmp = raw `<=|<|>=|>`
 
@@ -38,7 +38,7 @@ const grammar =
 
 , string_chunck:
   [ [ nsc,    'chars', 'string_concat']
-  , [ escape, 'escape-sequence', 'string_concat']
+  , [ escape, 'escaped', 'string_concat']
   , [ dquote, 'string-end', 'main']
   ]
 
@@ -61,7 +61,7 @@ const grammar =
   ]
 
 , ineq:
-  [ [ number, 'number_ineq', 'main']
+  [ [ number, 'bound', 'main']
   , [ space,  'space',  'ineq']
   ]
 }

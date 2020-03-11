@@ -19,8 +19,8 @@ const  AND = 'and'  // and x x
     , WHEN = 'when' // when x x
     ,  IFF = 'iff'  // iff x x 
     ,  NOT = 'not'  // not x
-    ,  TOP = 'top'  // top
-    ,  BOT = 'bot'  // bot
+    ,  TOP = 'any'  // top
+    ,  BOT = 'bottom'  // bot
     ,  BOX = 'box'  // box m x
     , DIAM = 'diam' // diam m x
     , RAISE = 'raise' // raise x // nonstandard, a hack. 
@@ -122,8 +122,8 @@ function internalCompare (a, b) {
 // which with the orfder above is simply done with
 // below true => above false
 
-const ABOVE = 'above' // '≤'
-const BELOW = 'below' // '<'
+const ABOVE = '≤' // 'above' // 
+const BELOW = '<' // 'below' // 
 
 function normalizeDelimiter ([tag, value]) {
   return tag === BELOW && value === true ? [ABOVE, false]
@@ -443,75 +443,70 @@ function rank (gx) {
   const [g, x, y, z] = gx 
   return g === LEAVE ? x + 1
     : g === RETURN ? 0
-    : g === TEST || g === ENTER || g === TYPE || g === VALUE ? Math.max (x, z) + 1
+    : g === TEST || g === ENTER ? Math.max (x, z) + 1
     : 0 }
 
 // To see what we are doing, it is useful to be able to draw G-nodes. 
 // Draws a G-node `n` containing points {x, y} at point `pt`. 
 
-// I want the dimensions to be added in here, and have it work.. like a recipie
-// also without having the subnode positions available. 
-// Something like... { width, height, shape,  }
-// Yes.. but I also want to specify HOW to draw the children..
-// which may be... shape, child, label, ...
-// Yes it should be a draw function simply, returning some pic-data together
-// with an origin, width, height, fo be placed by the positioning?
-// but then.. the arcs, remain problematic
-// hmmm 
-
-function drawG (canvas, pt, n) {
-  var C = canvas
-  var c = n[0]
-
-  if (c === TEST) {
-    C.circle ('node', pt, 12.8)
-    C.arc ('false', pt, -3/8, n[1])
-    C.label ('', n[2] , pt)
-    C.arc ('true' , pt,  3/8, n[3]) }
-
-  else if (c === ENTER) {
-    C.use ('enter', pt)
-    C.arc ('false', pt, -3/8, n[1])
-    C.label ('', n[2] , pt)
-    C.arc ('true' , pt,  3/8, n[3]) }
-
-  else if (c === LEAVE) {
-    C.hline ('node', pt, 36)
-    C.arc ('leave', pt, 1/2, n[1], .2, 0) } // from, angle, to, curvature, curvature offset
-
-  else if (c === RETURN) {
-    C.rect ('node', pt, 24, 19.2)
-    C.label ('return', n[1] ? '&#x22A4;' : '&#x22A5;', pt) }
-
-  else if (c === FAIL) {
-    C.rect ('node', pt, 24, 19.2)
-    C.label ('fail', 'X', pt) }
-
+function picFor (n) {
+  const c = n[0]
+  if (c === TEST) return {
+    width:55,
+    height:30,
+    depth:15,
+    class:c,
+    anchor: {x:0, y:-18},
+    shape:'M 0 -6 m 0 -12.8 a1 1 0 1 1 0 25.6 a1 1 0 1 1 0 -25.6 z',
+    label:n[2],
+    anchors: [
+      { for:1, class:'false', dir:-4/12, from: {x:-12, y:0 }, bend:1 },
+      { for:3, class:'true',  dir: 4/12, from: {x: 12, y:0 }, bend:1 }
+    ],
+  }
+  if (c === ENTER) return {
+    width:120, // NB the origin is at 60
+    height:25,
+    depth:20,
+    anchor: {x:0, y:-18},
+    class:c,
+    shape:'M0 -5 m-54 0 l 12 12 h84 l12 -12 l-12 -12 h-84zm114 0 l-18 18',
+    label:n[2],
+    anchors: [
+      { for:1, class:'false', from:{x:-48, y:0}, dir:-3/8 },
+      { for:3, class:'true',  from:{x: 48, y:0}, dir: 3/8 }
+    ],
+  }
+  if (c === LEAVE) return {
+    width:55,
+    height:8,
+    depth:10,
+    anchor: {x:0, y:-4},
+    class:c,
+    shape:'m-18 -4h36',
+    anchors: [
+      { for:1, class:'pop', dir:1/2 },
+      /// ('leave', pt, 1/2, n[1], .2, 0) } // from, angle, to, curvature, curvature offset
+    ],
+  }
+  if (c === RETURN) return {
+    width:75,
+    height:25,
+    depth:22,
+    class:c,
+    anchor: {x:0, y:-15},
+    shape:'M-12.5 -15 h24 v19 h-24z',
+    label:n[1] ? '&#x22A4;' : '&#x22A5;',
+    anchors:[]
+  }
 }
 
-
-var dims = 
-{   'test': { width:55, height:45 }
-,   'type': { width:80, height:45 }
-,  'value': { width:80, height:45 }
-,  'enter': { width:55, height:45 }
-,  'leave': { width:55, height:3  }
-, 'return': { width:55, height:23 }
-,   'fail': { width:55, height:23 }
-}
-
+function picFor_ (heap) { return i => picFor (heap[i]) }
 
 function toSvg (heap) {
-  var grouped  = L.group_by (G, (a,b) => cmp_js (b, a), rank, heap)
-  var metrics = L.layout2 (function(gx){ return dims[gx[0]] }, grouped, heap)
-    , ps = metrics.positions
-    , C = new L.Canvas (metrics)
-  function getPosition (x) { return ps[x] }
-  for (var i=0,l=heap.length; i<l;i++)
-    drawG (C, ps[i], G (getPosition) (heap[i]))
-
-  return C.render ()
+  var layers = L.groupByRank (G, (a,b) => cmp_js (b,a), rank, heap)
+  return L.layout2 (layers, picFor_(heap), (x,k) => heap[x][k]).render ()
 }
 
 
-module.exports = { Store, drawG, toSvg, run, internalCompare }
+module.exports = { Store, toSvg, run, internalCompare }

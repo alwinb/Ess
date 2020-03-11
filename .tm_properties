@@ -1,1 +1,33 @@
-excludeInFolderSearch = "{ignore/*,dist/*,*/ignore/*,*/other/*,node_modules/*}"
+
+# TextMate configuration
+
+excludeInFolderSearch = "{ignore,dist,node_modules}"
+
+
+# Setting TM_RUN_TARGET to be picked up by my Run Javascript Command
+# Currently set up to run the files with some related 'test' code. 
+
+[src/lexer.js]
+TM_RUN_TARGET = "${TM_PROJECT_DIRECTORY}/test/lexer.test.js"
+
+
+[src/parser.js]
+TM_RUN_TARGET = "${TM_PROJECT_DIRECTORY}/test/parser.test.js"
+TM_EXIT_CODE = 205
+
+
+[src/index.js]
+TM_RUN_TARGET = "${TM_PROJECT_DIRECTORY}/test/index.test.js"
+
+
+[src/ess-core.js]
+TM_RUN_TARGET = "${TM_PROJECT_DIRECTORY}/test/test.js"
+TM_EXIT_CODE = 205
+
+
+[test/test.js]
+TM_EXIT_CODE = 205
+
+
+[test/parser.test.js]
+TM_EXIT_CODE = 205
