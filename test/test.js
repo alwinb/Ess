@@ -1,31 +1,12 @@
 const { core } = require ('../src/')
 const log = console.log.bind (console)
 
-// Use tagscript for html generation
-
-const { tag, end, Renderer, render, raw, Page } = require ('tagscript')
-
-function box (...tags) {
-  return [tag('div', {class:'box'}), tags, end ('div')]
-}
-
-function wrap (name, ...tags) {
-  return [tag (name), tags, end (name)]
-}
-
-// Idea, I'd like this to be autocurried
-function* map (fn, it) { 
-  for (x of it)
-    yield fn (it)
-}
-
 const store = new core.Store ()
 function exec (str) {
   let tm = core.parse (str)
   let x = store.eval (tm)
   return core.toSvg (store.trace (x) .heap)
 }
-
 
 const style = 
 `<style>
@@ -43,7 +24,7 @@ const style =
     text-align:center;
     background:#eee;
     border-radius:4px;
-    padding:3px 2px;
+    padding:3px .5em;
     margin-bottom:1em;
     border:1px solid #ccc;
   }
