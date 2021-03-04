@@ -3,7 +3,7 @@ const log = console.log.bind (console)
 const show = _ => console.log (inspect (_, { depth:10 }), '\n')
 const hoop = require ('../lib/hoop2.js')
 const { token, tokenType, start, atom, prefix, infix, assoc, end } = hoop
-const { LEAF, PREFIX } = hoop.Roles
+const { LEAF, PREFIX, INFIX, POSTFIX } = hoop.Roles
 const { raw } = String
 
 // HOOP Grammar for Ess
@@ -34,7 +34,6 @@ const Term = {
   skip: skips,
   end: end `[)]`,
   sig: [
-
     { any:    atom `any\b`
     , bottom: atom `bottom\b`
     , type:   atom `boolean\b | number\b | string\b`
@@ -44,7 +43,7 @@ const Term = {
     , string: [LEAF, `["]`,  'Chars', `["]`] }, // wrapfix-atom
 
     { iff:    assoc `<->` },
-    { then:   assoc `->`  },
+    { then:   infix `->`  }, // is infixr -- should change that in hoop
     { or:     assoc `[|]` },
     { and:    assoc `[&]` },
 
@@ -96,7 +95,7 @@ for (const ruleName in _ts)
 // Configuring the parser
 // ----------------------
 
-function parse (input, apply) {
+function parse (input) {
   const S0 = compiled.lexers.Term.Before.next ('(')
   const E0 = compiled.lexers.Term.After.next (')')
   const p = new hoop.Parser (compiled.lexers, S0, E0, apply)
@@ -104,20 +103,54 @@ function parse (input, apply) {
 }
 
 
+// The parser algebra
+// ------------------
+
+const T = compiled.types
+
+function apply (...args) {
+  const [op, x1, x2] = args
+  const [tag, data] = op
+  // log (op, x1||'', x2||'')
+  
+  args[0] = typeNames [tag]
+  log (tag, typeNames[tag])
+  const r
+    = tag === T.Term.group ? x1
+    : tag === T.Term.type ? [args[0], data]
+    : tag === T.Term.number ? ['value', +data]
+    : tag === T.Term.value  ? ['value', {null:null, true:true, false:false}[data]]
+    : tag === T.Term.modal ?  [x1[0], data, x2]
+
+    : tag === T.Chars.chars ? data
+    : tag === T.Chars.conc ? x1 + x2
+    : tag === T.Chars.esc ? { '\\n':'\n', '\\f':'\t', '\\f':'\f' }[data] // TODO
+
+    : args
+  return r
+}
+
+
 // Testing
 // -------
 
 var samples = [
-  'number',
-  'a:10',
+  // 'number',
+  '1|2',
+  'a?: 10',
   '1 | 2 | 3',
   '1 & 2 | !3 & 4',
-  'number -> 1 | 2 & a:boolean',
+  '"foo\\nbar"',
+  'number',
+  '1 & name:any',
+  'name ?: bottom',
+  'true | false'
+  // 'number -> 1 | 2 & a:boolean',
 ]
 
 for (let s of samples) {
   log (s)
   log (s.replace (/./g, '='))
-  show (parse (s)[1])
+  show (parse (s))
 }
 
