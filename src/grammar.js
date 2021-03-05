@@ -1,10 +1,11 @@
-const { inspect } = require ('util')
 const log = console.log.bind (console)
-const show = _ => console.log (inspect (_, { depth:10 }), '\n')
+// const { inspect } = require ('util')
+// const show = _ => console.log (inspect (_, { depth:10 }), '\n')
 const hoop = require ('../lib/hoop2.js')
 const { token, tokenType, start, atom, prefix, infix, assoc, end } = hoop
 const { LEAF, PREFIX, INFIX, POSTFIX } = hoop.Roles
 const { raw } = String
+
 
 // HOOP Grammar for Ess
 // ====================
@@ -39,16 +40,26 @@ const Term = {
     , type:   atom `boolean\b | number\b | string\b`
     , number: atom `${_int} ${_frac}? ${_exp}?`
     , value:  atom `null\b | true\b | false\b`
-    , group:  [LEAF, `[(]`,  'Term',  `[)]`]    // wrapfix-atom
-    , string: [LEAF, `["]`,  'Chars', `["]`] }, // wrapfix-atom
+    , range:  [LEAF, `<=?|>=?`, 'Range', `.{0}`] // 'wrapfix'-atom
+    , group:  [LEAF, `[(]`,     'Term',   `[)]`]        // wrapfix-atom
+    , string: [LEAF, `["]`,     'Chars',  `["]`] },     // wrapfix-atom
 
     { iff:    assoc `<->` },
     { then:   infix `->`  }, // is infixr -- should change that in hoop
     { or:     assoc `[|]` },
     { and:    assoc `[&]` },
 
-    { modal:  [PREFIX, `[a-zA-Z_][a-zA-Z_0-9]*`, 'Modal', `.{0}` ] }, // 'wrapfix'-postfix
+    { modal:  [PREFIX, `[a-zA-Z_][a-zA-Z_0-9]*`, 'Modal', `.{0}` ] }, // 'wrapfix'-prefix
     { not:    prefix `[!]` }
+  ]
+}
+
+const Range = {
+  name: 'Range',
+  skip: skips,
+  end: end `.{0}`,
+  sig: [
+    { number: atom `${_int} ${_frac}? ${_exp}?` }
   ]
 }
 
@@ -80,7 +91,7 @@ const Chars = {
 // -------------------
 
 const compiled =
-  hoop.compile ({ Term, Modal, Chars })
+  hoop.compile ({ Term, Modal, Range, Chars })
 
 // Collecting the names for the node types
 
@@ -95,7 +106,8 @@ for (const ruleName in _ts)
 // Configuring the parser
 // ----------------------
 
-function parse (input) {
+function parse (input, apply_) {
+  const apply = apply_ == null ? preEval : (...args) => apply_ (preEval (...args))
   const S0 = compiled.lexers.Term.Before.next ('(')
   const E0 = compiled.lexers.Term.After.next (')')
   const p = new hoop.Parser (compiled.lexers, S0, E0, apply)
@@ -108,49 +120,28 @@ function parse (input) {
 
 const T = compiled.types
 
-function apply (...args) {
+function preEval (...args) {
   const [op, x1, x2] = args
   const [tag, data] = op
-  // log (op, x1||'', x2||'')
-  
   args[0] = typeNames [tag]
-  log (tag, typeNames[tag])
+  // log ('preEval', op, x1||'', x2||'')
+  // log (tag, typeNames[tag])
   const r
     = tag === T.Term.group ? x1
-    : tag === T.Term.type ? [args[0], data]
+    : tag === T.Term.type   ? [args[0], data]
+    : tag === T.Term.range  ? [ {'<':'lt', '<=':'lte', '>':'gt', '>=':'gte'}[data], x1]
     : tag === T.Term.number ? ['value', +data]
+    : tag === T.Range.number ? +data
+    : tag === T.Term.string ? ['value', x1]
     : tag === T.Term.value  ? ['value', {null:null, true:true, false:false}[data]]
-    : tag === T.Term.modal ?  [x1[0], data, x2]
+    : tag === T.Term.modal  ?  [x1[0], data, x2]
 
     : tag === T.Chars.chars ? data
     : tag === T.Chars.conc ? x1 + x2
-    : tag === T.Chars.esc ? { '\\n':'\n', '\\f':'\t', '\\f':'\f' }[data] // TODO
+    : tag === T.Chars.esc ? { '\\n':'\n', '\\t':'\t', '\\f':'\f' }[data] // TODO
 
     : args
   return r
 }
 
-
-// Testing
-// -------
-
-var samples = [
-  // 'number',
-  '1|2',
-  'a?: 10',
-  '1 | 2 | 3',
-  '1 & 2 | !3 & 4',
-  '"foo\\nbar"',
-  'number',
-  '1 & name:any',
-  'name ?: bottom',
-  'true | false'
-  // 'number -> 1 | 2 & a:boolean',
-]
-
-for (let s of samples) {
-  log (s)
-  log (s.replace (/./g, '='))
-  show (parse (s))
-}
-
+module.exports = { parse }

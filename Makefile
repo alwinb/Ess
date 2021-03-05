@@ -5,12 +5,13 @@ ess: dist/ess.min.js
 repl: dist/repl.html dist/repl.js
 
 libs = aatree.js base.js layout.js
-srcs = browser.js index.js parser.js ess-core.js lexer.js
+srcs = browser.js index.js desugar.js ess-core.js grammar.js
 lib = $(addprefix lib/, $(libs)) 
 src = $(addprefix src/, $(srcs)) 
 
 dist/ess.min.js: dist/ $(lib) $(src)
-	@ browserify src/browser.js | terser > dist/ess.min.js
+	@ echo "Making minified browser bundle"
+	@ esbuild --bundle --minify src/browser.js > dist/ess.min.js
 
 dist/repl.html: dist/ src/repl.html dist/ess.min.js dist/repl.js
 	@ cp src/repl.html ./dist/repl.html

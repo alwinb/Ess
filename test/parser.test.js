@@ -1,5 +1,5 @@
 const AATree = require ('../lib/aatree.js')
-const { parse, coalesce } = require ('../src/parser')
+const { parse } = require ('../src/grammar')
 const { layout2, Canvas } = require ('../lib/layout')
 
 const {
@@ -41,18 +41,14 @@ function toSvg (tree) {
 // var str = 'foo:true & bar:false & (true|false) | "foo\\nbar"'
 // var str = '<10 & name:"joe" | null & true | 3 & false | boolean | string'
 //
-// var tree = parse (str, preEval)
+// var tree = parse (str)
 //log(JSON.stringify(tree, null,2))
 //log (toSvg (tree))
 // log (str)
 //
 
 // const signature = RawTerms
-// const preEval = x => x
-
 const signature = Terms
-const preEval = coalesce
-
 const F = createFunctor (signature)
 const createImage = createImageFunction (signature)
 const rank = createRankFunction (signature)
@@ -106,7 +102,7 @@ function main (samples) {
     .filter (sample => sample != null)
     .forEach (sample => {
       log ('<div class=box>\n<code class=input>', sample, '</code>')
-      log (toSvg (parse (sample, preEval)))
+      log (toSvg (parse (sample)))
       log ('</div>')
     })
 }

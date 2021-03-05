@@ -3,7 +3,7 @@ const log = console.log.bind (console)
 
 const store = new core.Store ()
 function exec (str) {
-  let tm = core.parse (str)
+  let tm = core.parse (str, core.desugar)
   let x = store.eval (tm)
   return core.toSvg (store.trace (x) .heap)
 }
