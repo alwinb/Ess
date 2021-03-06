@@ -1,7 +1,8 @@
 // The Ess Schema Language
 // =======================
 
-const { parse, desugar } = require ('./parser')
+const { desugar } = require ('./desugar')
+const { parse } = require ('./grammar')
 const { Store, toSvg, run } = require ('./ess-core.js')
 
 function EssExp (string) {
@@ -27,7 +28,7 @@ ess.assert = (...args) =>
   new EssExp (String.raw (...args)).assert
 
 function compile (string, store = new Store ()) {
-  let tm = parse (string)
+  let tm = parse (string, desugar)
   let x = store.eval (tm)
   return { id: x, dtree: store.build (x) }
 }

@@ -68,6 +68,8 @@ const samples =
   , null
 
   , '"joe"'
+   , `"Hello, \\n\\t World!"`
+  , `"U -\\u0065BC"`
   , '"joe" & "fred"'
   , '"joe" | "fred"'
   , '!"joe" & !"fred"'
