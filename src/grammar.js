@@ -41,8 +41,8 @@ const Term = {
     , number: atom `${_int} ${_frac}? ${_exp}?`
     , value:  atom `null\b | true\b | false\b`
     , range:  [LEAF, `<=?|>=?`, 'Range', `.{0}`] // 'wrapfix'-atom
-    , group:  [LEAF, `[(]`,     'Term',   `[)]`]        // wrapfix-atom
-    , string: [LEAF, `["]`,     'Chars',  `["]`] },     // wrapfix-atom
+    , group:  [LEAF, `[(]`,     'Term',   `[)]`] // wrapfix-atom
+    , string: [LEAF, `["]`,     'Chars',  `["]`] }, // wrapfix-atom
 
     { iff:    assoc `<->` },
     { then:   infix `->`  }, // is infixr -- should change that in hoop
@@ -80,9 +80,9 @@ const Chars = {
     { chars:  atom `[^\x00-\x19\\"]+`
     , esc:    atom `[\\]["/\\bfnrt]`
     , hexesc: atom `[\\]u[a-fA-F0-9]{4}`
-    , empty:  atom `.{0}` },
+    , empty:  atom `.{0}(?=")` },
 
-    { conc:  infix `.{0}` }
+    { conc:  infix `.{0}(?!")` }
   ]
 }
 
@@ -118,6 +118,16 @@ function parse (input, apply_) {
 // The parser algebra
 // ------------------
 
+const _escapes = {
+  '\\/': '/',
+  '\\\\':'\\',
+  '\\b': '\b',
+  '\\f': '\f',
+  '\\n': '\n',
+  '\\r': '\r',
+  '\\t': '\t',
+}
+
 const T = compiled.types
 
 function preEval (...args) {
@@ -136,9 +146,11 @@ function preEval (...args) {
     : tag === T.Term.value  ? ['value', {null:null, true:true, false:false}[data]]
     : tag === T.Term.modal  ?  [x1[0], data, x2]
 
+    : tag === T.Chars.empty ? ''
     : tag === T.Chars.chars ? data
+    : tag === T.Chars.esc ? _escapes [data]
+    : tag === T.Chars.hexesc ? String.fromCodePoint (parseInt (data.substr(2), 16))
     : tag === T.Chars.conc ? x1 + x2
-    : tag === T.Chars.esc ? { '\\n':'\n', '\\t':'\t', '\\f':'\f' }[data] // TODO
 
     : args
   return r
