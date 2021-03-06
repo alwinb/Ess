@@ -24,12 +24,6 @@ const _exp = raw `(?:[Ee][+-]?[0-9]+)`
 
 // ### Hoop Signature
 
-// TODO still add the numeric ranges
-//  '>': [ 'gt', T.PREFIX, 0]
-// '>=': ['gte', T.PREFIX, 0]
-//  '<': [ 'lt', T.PREFIX, 0]
-// '<=': ['lte', T.PREFIX, 0]
-
 const Term = {
   name: 'Term',
   skip: skips,
