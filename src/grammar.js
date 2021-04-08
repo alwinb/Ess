@@ -23,6 +23,8 @@ const _exp = raw `(?:[Ee][+-]?[0-9]+)`
   ,   _int = raw `(?:-?(?:0|[1-9][0-9]*))`
 
 // ### Hoop Signature
+// Operators are grouped by precedence and
+// ordered by streangth, increasing. 
 
 const Term = {
   name: 'Term',

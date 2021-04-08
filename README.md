@@ -1,22 +1,36 @@
 # Ess Expression Language
 
-Ess is an expression language for describing properties of JSON records. 
-It has a nice mathematical structure, supporting the boolean algebra operations and optional and required record fields on top of primitive types, primitive values and numeric ranges. 
+Ess is an expression language for describing properties of data structures that are built up from primitive values and nested records. 
+It supports the boolean algebra operations and optional and required record fields on top of primitive types, primitive values and numeric ranges. 
 
-The Ess compiler can be used as a theorem prover for the Ess language. 
-This is a consequence of the fact that it always compiles semantically equivalent expressions to the same end result, so that checking equivalence of two expressions becomes the same thing as checking equality of their compilations. 
+## Motivation
+
+The motivation for this project is to investigate semantic rather than proof theoretic approaches for implementing type systems; to develop new data structures for representing types, and to use the concept of **canonical representation** to decide type equivalence and subtype relationships.  
+
+In Ess, type expressions are compiled to a decision tree datastructure that has a reduced, ordered variant to achieve canonical representation. This effectively turns the compiler into a theorem prover that can be used to decide equivalence of type expressions. Since the Ess language includes the boolean algebra operations, it can also be used to compute subtype relationships.
+
+[bdd]: https://en.wikipedia.org/wiki/Binary_decision_diagram
 
 
 ## Syntax
 
 ### Basics
+
+Primitives:
+
 - primitive types: `boolean` `number` `string`
 - null value and boolean values: `null` `true` `false`
-- string values, e.g. `"string value"` `"foo"` `"bar"`
+- string values, e.g. `"Hello, World"` `"foo"` `"bar"`
 - numeric values, e.g. `-1` `3.14`
 - numeric ranges, e.g. `< 2` `<= 3` `> 4` `>= 3`
-- obligatory record fields: `:`, e.g. `id: number` and `type: "click"`
-- optional record fields: `?:` e.g. `id?: number` and `type ?: "click"`
+
+Record fields:
+
+- obligatory record fields: _name_`:`_expr_, e.g. `id: number` and `type: "click"`
+- optional record fields: _name_`?:`_expr_, e.g. `id?: number` and `type ?: "click"`
+
+Booelan algebra operations:
+
 - negation, intersection and union, `!` `&` `|`
 for example: `!null` `number & <3` and `"foo"|"bar"`
 - implication and equivalence: `->`, `<->`,
