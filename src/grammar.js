@@ -23,12 +23,8 @@ const _exp = raw `(?:[Ee][+-]?[0-9]+)`
   ,   _int = raw `(?:-?(?:0|[1-9][0-9]*))`
 
 // ### Hoop Signature
-
-// TODO still add the numeric ranges
-//  '>': [ 'gt', T.PREFIX, 0]
-// '>=': ['gte', T.PREFIX, 0]
-//  '<': [ 'lt', T.PREFIX, 0]
-// '<=': ['lte', T.PREFIX, 0]
+// Operators are grouped by precedence and
+// ordered by streangth, increasing. 
 
 const Term = {
   name: 'Term',
