@@ -1,5 +1,5 @@
-const { EssExp, ess, core } = require ('../src/')
-const { parse, Store, compile } = core
+const { EssExp, ess, Store, core } = require ('../src/')
+const { parse, compile } = core
 const log = console.log.bind (console)
 
 // var e = ess `type:"click" -> clientX:number & clientY:number`

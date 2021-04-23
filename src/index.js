@@ -37,5 +37,4 @@ function compile (string, store = new Store ()) {
 // Exports
 // -------
 
-
-module.exports = { EssExp, ess, core: { parse, desugar, Store, toSvg, compile } }
+module.exports = { EssExp, ess, Store, core: { parse, desugar, Store, toSvg, compile } }

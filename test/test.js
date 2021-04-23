@@ -1,7 +1,7 @@
-const { core } = require ('../src/')
+const { Store, core } = require ('../src/')
 const log = console.log.bind (console)
 
-const store = new core.Store ()
+const store = new Store ()
 function exec (str) {
   let tm = core.parse (str, core.desugar)
   let x = store.eval (tm)
