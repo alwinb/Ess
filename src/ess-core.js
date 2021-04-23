@@ -13,16 +13,25 @@ const cmp_js = (t1, t2) =>
 // The Ess Term Algebra for Desugared Terms
 // ----------------------------------------
 
-const  AND = 'and'  // and x x
-    ,   OR = 'or'   // or x x
-    , THEN = 'then' // then x x
-    , WHEN = 'when' // when x x
-    ,  IFF = 'iff'  // iff x x 
-    ,  NOT = 'not'  // not x
-    ,  TOP = 'any'  // top
-    ,  BOT = 'bottom'  // bot
-    ,  BOX = 'box'  // box m x
-    , DIAM = 'diam' // diam m x
+const   TOP = 'any'     // top
+    ,   BOT = 'bottom'  // bot
+    ,  BOOL = 'boolean'
+    ,   NUM = 'number'
+    ,   STR = 'string'
+    , VALUE = 'value'   // VALUE v
+    ,   BOX = 'box'     // box m x
+    ,  DIAM = 'diam'    // diam m x
+    ,   NOT = 'not'     // not x
+    ,   AND = 'and'     // and x x
+    ,    OR = 'or'      // or x x
+    ,  THEN = 'then'    // then x x
+    ,   IFF = 'iff'     // iff x x 
+    ,    LT = 'lt'      // lt v
+    ,   LTE = 'lte'     // lte v
+    ,   GTE = 'gte'     // gte v
+    ,    GT = 'gt'      // gt v
+
+    // internals
     , RAISE = 'raise' // raise x // nonstandard, a hack. 
     , ILT  = 'ILT'  // ILT v
     , ILTE = 'ILTE' // ILTE v
@@ -58,6 +67,7 @@ const compareFNodesWith = cmp_x => (t1, t2) => {
   : c1 === BOX    ? cmp_js (x1, x2) || cmp_x (y1, y2)
   : c1 === DIAM   ? cmp_js (x1, x2) || cmp_x (y1, y2)
   : c1 in _twoary ? cmp_x  (x1, x2) || cmp_x (y1, y2)
+  : c1 === VALUE  ? internalCompare (x1, x2)
   : c1 === ILT    ? internalCompare (x1, x2)
   : c1 === ILTE   ? internalCompare (x1, x2)
   : c1 === IGT    ? internalCompare (x1, x2)
@@ -119,7 +129,7 @@ function internalCompare (a, b) {
 // number := [below null] and string := [above true]
 
 // To uniquely represent these delimiters, they need to be normalized. 
-// which with the orfder above is simply done with
+// which with the order above is simply done by rewriting
 // below true => above false
 
 const ABOVE = '≤' // 'above' // 
@@ -225,48 +235,73 @@ function evalBool (op, a, b) {
   return op === AND ? a && b
     : op === OR   ?  a || b
     : op === THEN ? !a || b
-    : op === WHEN ?  a || !b
     : op === IFF  ?  a === b
     : undefined }
 
 
-// The algebra
-// -----------
+// The Ess algebra
+// ---------------
 
 function Store () {
   const shared = new Shared (compareGNodesWith (compareNormalizedDelimiters))
+  const _norm = normalizeDelimiter
   const { inn, out } = shared
-  const bot = inn ([RETURN,  false])
-  const top = inn ([RETURN,  true])
 
-  this.out = out
-  this.heap = shared._reify ()
+  // Precompute the constants
+  // These are exposed in the API, and used by apply
 
-  this.trace = x => traceG (out, x)
-  this.build = (x) => buildG (out, x)
-  this.eval = evalEss
-  this.apply = apply
+  const bot  = inn ([RETURN,  false])
+  const top  = inn ([RETURN,  true])
+  const num  = inn ([TEST,  bot, _norm ([BELOW, null]), top])
+  const str  = inn ([TEST,  top, _norm ([ABOVE, true]), bot])
+  const bool = inn ([TEST,  inn ([TEST,  bot, _norm ([ABOVE, true]), top]), _norm ([BELOW, false]), bot])
+
+  // Algebraic constants
 
   this.top = top
-  this.bot = bot
-  this.bottom = bot
+  this.bot = this.bottom = bot
+  this.number = num
+  this.string = str
+  this.bool = this.boolean = bool
+
+  // Algebraic operations
+
+  this.value = v => { let t
+    if (v === null || (t = typeof v) === 'number' || t === 'boolean' || t === 'string')
+      return evalEss (['and', ['IGTE', v], ['ILTE', v]])
+    else
+      throw new Error ('Ess.Store.value, value must be null, a boolean, a string, or a number')
+    // TODO and not NaN
+  }
+
+  this.lt   = n => apply ([LT,  n]) // TODO must enforce n to be a non-NaN number
+  this.lte  = n => apply ([LTE, n])
+  this.gte  = n => apply ([GTE, n])
+  this.gt   = n => apply ([GT,  n])
+
   this.not = not
   this.and  = (...args) => apply ([AND,  ...args])
   this.or   = (...args) => apply ([OR,   ...args])
   this.then = (...args) => apply ([THEN, ...args])
-  this.when = (...args) => apply ([WHEN, ...args])
   this.iff  = (...args) => apply ([IFF,  ...args])
-  this._lt  = (...args) => apply ([ILT,  ...args])
-  this._lte = (...args) => apply ([ILTE, ...args])
-  this._gte = (...args) => apply ([IGTE, ...args])
-  this._gt  = (...args) => apply ([IGT,  ...args])
 
+  // Store management and inspection
+  
+  this.apply = apply
+  this.eval = evalEss
+
+  this._heap = shared._heap
+  this._out = out
+  this._trace = x => traceG (out, x)
+  this._build = x => buildG (out, x)
+
+  // Implementation
 
   // apply: FX -> X
   // is a function that applies a 'first order operation',
   // e.g. an operator from the Ess algebra together with
   // operands being Ess-bdds,
-  // and returns a reference to a new Ess-bdd. 
+  // and returns a reference to a new Ess-bdd.
 
   function apply (fx) {
     const fdx = F (x => [0, x]) (fx)
@@ -296,8 +331,6 @@ function Store () {
       : c === LEAVE   ? [ LEAVE, [ n-1, x1 ] ]
       : node }
 
-  const _norm = normalizeDelimiter
-
   // Internally, apply uses sorts, 
   // here implemented in _apply: FDX -> X 
   // _apply assumes references to:
@@ -315,6 +348,16 @@ function Store () {
     case  DIAM: return inn ([ENTER, bot, a, raise (b[1])]) // strip the sort
     case   NOT: return not (a[1]) // strip the sort
 
+    case   NUM: return num
+    case   STR: return str
+    case  BOOL: return bool
+    case VALUE: return evalEss ([AND, [IGTE, a], [ILTE, a]]) // NB assumes a is primitive
+    case    LT: return evalEss ([AND, [ILT,  a], [ILT, null]])
+    case   LTE: return evalEss ([AND, [ILTE, a], [ILT, null]])
+    case   GTE: return evalEss ([AND, [IGTE, a], [ILT, null]])
+    case    GT: return evalEss ([AND, [IGT,  a], [ILT, null]])
+
+    // private/ internal comparisons
     case   ILT: return inn ([TEST,  bot, _norm ([BELOW, a]), top])
     case  ILTE: return inn ([TEST,  bot, _norm ([ABOVE, a]), top])
     case   IGT: return inn ([TEST,  top, _norm ([ABOVE, a]), bot])
@@ -322,6 +365,7 @@ function Store () {
 
     case AND: /* short circuit optimization */
       var x = a[1], y = b[1] // strip the sorts
+      // log ('AND', x, y)
       if (x === y) return x
       else if (x === bot || y === bot) return bot
       else if (x === top) return y
@@ -337,6 +381,7 @@ function Store () {
       /* fallthrough */
 
     default:
+      // log ('DEFAULT', a, b)
       const [gdx, gdy] = [out_s (a), out_s (b)]
       const decision = cmp_js (b[0], a[0]) || decide (gdx, gdy) // note the reverse compare on sorts
 
@@ -452,16 +497,16 @@ function rank (gx) {
 function picFor (n) {
   const c = n[0]
   if (c === TEST) return {
-    width:55,
+    width:120,
     height:30,
     depth:15,
     class:c,
     anchor: {x:0, y:-18},
-    shape:'M 0 -6 m 0 -12.8 a1 1 0 1 1 0 25.6 a1 1 0 1 1 0 -25.6 z',
-    label:n[2],
+    shape:'M 36 -6 m 0 -12.8 a1 1 0 1 1 0 25.6 l-72 0 a1 1 0 1 1 0 -25.6 z',
+    label:JSON.stringify (n[2]) .replace (/^\[|\]$/g, ''),
     anchors: [
-      { for:1, class:'false', dir:-4/12, from: {x:-12, y:0 }, bend:1 },
-      { for:3, class:'true',  dir: 4/12, from: {x: 12, y:0 }, bend:1 }
+      { for:1, class:'false', dir:-4/12, from: {x:-48, y:0 }, bend:1 },
+      { for:3, class:'true',  dir: 4/12, from: {x: 48, y:0 }, bend:1 }
     ],
   }
   if (c === ENTER) return {

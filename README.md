@@ -39,7 +39,7 @@ for example: `true -> boolean`, `boolean <-> true | false`
 ### Operator Precedence
 
 Ess uses the usual mathematical operator precedence rules. 
-The record field operators `:` and `?:` bind strongest, so that `id: number | null` is parsed as  `(id: number) | null`. From there, 'not' binds stronger than 'and', binds stronger than 'or', binds stronger than 'implies', binds stronger than 'equivs': (`:`, `?:`, `!`, `&`,  `|`, `->`, `<->`). 
+The record field (prefix) operators _name_`:` and _name_`?:` bind strongest, so that `id: number | null` is parsed as  `(id: number) | null`. From there, 'not' binds stronger than 'and', binds stronger than 'or', binds stronger than 'implies', binds stronger than 'equivs': (`:`, `?:`, `!`, `&`,  `|`, `->`, `<->`). 
 
 
 ### Some Examples
@@ -59,37 +59,43 @@ Note that in Ess, optional record fields are not the same as nullable record fie
 
 # API
 
-The API is split in two parts. There is a high level interface that works similar the the RegExp object, and a more low-level interface that exposes the algebraic operations on Ess expressions. 
-
+The API is split into two parts. There is a somewhat low-level interface that exposes the algebraic operations on Ess decision diagrams, and a more high level interface that works similar the the RegExp object. 
 
 ## Ess Algebra
 
-A single Store class, which is a store for reduced, ordered Ess decision diagrams. The Store has methods that implements the Ess-algebra operations on elements in the store. In addition it has number of methods for memory management and traversal/ store inspection. 
+The more low-level interface consists of a single Store class, which is used to store reduced, ordered Ess decision diagrams and provides methods that corespond to the algebraic operations on them. 
+
+### Ess.Store
 
 - constructor ()
+- apply ([op, ...args])
+- eval (ast)
+
+The following properties and methods correspond to the constants and operations of the Ess algebra.  
+These result in integers that serve as references back into the store:
+
 - top
 - bottom, bot
 - boolean
 - number
 - string
 - value (v)
+- lt (n), lte (n), gte (n), gt (n)
 - not (ref)
 - and (ref1, ref2)
 - or (ref1, ref2)
 - then (ref1, ref2)
 - iff (ref1, ref2)
 
+### EssExp
 
-## High level API
+The more high level API consists of a single EssExp class, and a function _ess_ that can be used to create EssExp objects via tagged template literals. 
 
-- class EssExp
-  - constructor (string)
-  - isTop
-  - isBottom
-  - test (input)
-  - assert (inpput)
-
-There is also a function _ess_ that can be used to create EssExp objects with tagged template literals. 
+- constructor (string)
+- isTop
+- isBottom
+- test (input)
+- assert (inpput)
 
 ### Examples
 
