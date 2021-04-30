@@ -1,7 +1,6 @@
 // The Ess Schema Language
 // =======================
 
-const { desugar } = require ('./desugar')
 const { parse } = require ('./grammar')
 const { Store, toSvg, run } = require ('./ess-core.js')
 
@@ -28,14 +27,13 @@ ess.assert = (...args) =>
   new EssExp (String.raw (...args)).assert
 
 function compile (string, store = new Store ()) {
-  let tm = parse (string, desugar)
+  let tm = parse (string)
   let x = store.eval (tm)
-  return { id: x, dtree: store.build (x) }
+  return { id: x, dtree: store._build (x) }
 }
 
 
 // Exports
 // -------
 
-
-module.exports = { EssExp, ess, core: { parse, desugar, Store, toSvg, compile } }
+module.exports = { EssExp, ess, Store, core: { parse, Store, toSvg, compile } }

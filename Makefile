@@ -5,7 +5,7 @@ ess: dist/ess.min.js
 repl: dist/repl.html dist/repl.js
 
 libs = aatree.js base.js layout.js
-srcs = browser.js index.js desugar.js ess-core.js grammar.js
+srcs = browser.js index.js ess-core.js grammar.js
 lib = $(addprefix lib/, $(libs)) 
 src = $(addprefix src/, $(srcs)) 
 

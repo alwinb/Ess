@@ -52,17 +52,20 @@ const RawTerms = {
 // numeric bounds. 
 
 const Terms = {
-  any:    [],
-  bottom: [],
-  and:    [0, 0],
-  or:     [0, 0],
-  not:    [0   ],
-  then:   [0, 0],
-  iff:    [0, 0],
-  diam:   ['name', 0],
-  box:    ['name', 0],
-//group:  [0   ],
-  type:   ['string'],
+  any:     [],
+  bottom:  [],
+  and:     [0, 0],
+  or:      [0, 0],
+  not:     [0   ],
+  then:    [0, 0],
+  iff:     [0, 0],
+  diam:    ['name', 0],
+  box:     ['name', 0],
+
+  number:  [],
+  boolean: [],
+  string:  [],
+
   value:  ['primitive'],
   lt:     ['number'],
   lte:    ['number'],

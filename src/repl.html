@@ -101,8 +101,9 @@ function main () {
 			return window.setTimeout (repl.clear, 0)
 		}
 		else try {
-			var tm = Ess.core.parse (input, Ess.core.desugar)
-			var svg = Ess.core.toSvg (store.trace (store.eval(tm)) .heap)
+			var tm = Ess.core.parse (input)
+      log (tm)
+			var svg = Ess.core.toSvg (store._trace (store.eval(tm)) .heap)
 			return { type:'html_raw', value:svg }
 		} catch (e) {
 			//throw e

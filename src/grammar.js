@@ -40,10 +40,10 @@ const Term = {
     , group:  [LEAF, `[(]`,     'Term',   `[)]`] // wrapfix-atom
     , string: [LEAF, `["]`,     'Chars',  `["]`] }, // wrapfix-atom
 
-    { iff:    assoc `<->` },
-    { then:   infix `->`  }, // is infixr -- should change that in hoop
-    { or:     assoc `[|]` },
-    { and:    assoc `[&]` },
+    { iff:    infix `<->` }, // is assoc, but that's not implemented in ess
+    { then:   infix `->`  }, // is infixr -- should mark that in hoop
+    { or:     infix `[|]` }, // should be infixl -- not yet implemented in hoop
+    { and:    infix `[&]` },
 
     { modal:  [PREFIX, `[a-zA-Z_][a-zA-Z_0-9]*`, 'Modal', `.{0}` ] }, // 'wrapfix'-prefix
     { not:    prefix `[!]` }
@@ -114,15 +114,8 @@ function parse (input, apply_) {
 // The parser algebra
 // ------------------
 
-const _escapes = {
-  '\\/': '/',
-  '\\\\':'\\',
-  '\\b': '\b',
-  '\\f': '\f',
-  '\\n': '\n',
-  '\\r': '\r',
-  '\\t': '\t',
-}
+const _escapes =
+  { 'b':'\b', 'f':'\f', 'n':'\n', 'r':'\r', 't':'\t' }
 
 const T = compiled.types
 
@@ -133,18 +126,20 @@ function preEval (...args) {
   // log ('preEval', op, x1||'', x2||'')
   // log (tag, typeNames[tag])
   const r
-    = tag === T.Term.group ? x1
-    : tag === T.Term.type   ? [args[0], data]
-    : tag === T.Term.range  ? [ {'<':'lt', '<=':'lte', '>':'gt', '>=':'gte'}[data], x1]
+    = tag === T.Term.group  ? x1
+    : tag === T.Term.any    ? ['any']
+    : tag === T.Term.bottom ? ['bottom']
+    : tag === T.Term.type   ? [data, data]
+    : tag === T.Term.range  ? [{ '<':'lt', '<=':'lte', '>':'gt', '>=':'gte' } [data], x1]
     : tag === T.Term.number ? ['value', +data]
     : tag === T.Range.number ? +data
     : tag === T.Term.string ? ['value', x1]
-    : tag === T.Term.value  ? ['value', {null:null, true:true, false:false}[data]]
+    : tag === T.Term.value  ? ['value', { null:null, true:true, false:false } [data]]
     : tag === T.Term.modal  ?  [x1[0], data, x2]
 
     : tag === T.Chars.empty ? ''
     : tag === T.Chars.chars ? data
-    : tag === T.Chars.esc ? _escapes [data]
+    : tag === T.Chars.esc ? _escapes [data[1]] || data[1]
     : tag === T.Chars.hexesc ? String.fromCodePoint (parseInt (data.substr(2), 16))
     : tag === T.Chars.conc ? x1 + x2
 
