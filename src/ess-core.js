@@ -1,8 +1,7 @@
-"use strict"
 const log = console.log.bind (console)
-  , Map = require ('../lib/aatree')
-  , L = require ('../lib/layout')
-  , { Shared, fold, mem_fold } = require ('../lib/base')
+const Map = require ('../lib/aatree')
+const L = require ('../lib/layout')
+const { Shared, fold, mem_fold } = require ('../lib/base')
 
 const cmp_triv = () => 0
 const cmp_js = (t1, t2) =>
@@ -178,12 +177,12 @@ const mem_foldG = mem_fold (G)
 // This traces out the subterm rooted at x
 function traceG (out, x) { 
   const heap = []
-  const inn = fx => heap.push(fx) - 1
+  const inn = node => heap.push (node) - 1
   const memo = { v: new Map (cmp_js) } // memoisation of out :: X -> GX 
   return { heap, element:mem_foldG (memo, out, inn, x) }
 }
 
-// This converts a term-id into a tree;
+// This converts a term-id into a javascript structure;
 // however, internally it preserves the subterm sharing. 
 
 function buildG (out, x) { 
@@ -247,6 +246,22 @@ function Store () {
   const _norm = normalizeDelimiter
   const { inn, out } = shared
 
+  // Store management and inspection
+  
+  this._heap = shared._heap
+  this._out = out
+  this._trace = x => traceG (out, x) // TODO make public
+
+  this.apply = apply
+  this.eval = evalEss
+  this.toObject = x => buildG (out, assertInStore (x))
+
+  // TODO mark the roots?
+  this.toSvg = (x) => toSvg (
+    x != null ? this._trace (assertInStore (x)) .heap
+    : this._heap
+  )
+
   // Precompute the constants
   // These are exposed in the API, and used by apply
 
@@ -284,18 +299,16 @@ function Store () {
   this.or   = (...args) => apply ([OR,   ...args])
   this.then = (...args) => apply ([THEN, ...args])
   this.iff  = (...args) => apply ([IFF,  ...args])
-
-  // Store management and inspection
-  
-  this.apply = apply
-  this.eval = evalEss
-
-  this._heap = shared._heap
-  this._out = out
-  this._trace = x => traceG (out, x)
-  this._build = x => buildG (out, x)
+  this.diam = (...args) => apply ([DIAM,  ...args])
+  this.box  = (...args) => apply ([BOX,  ...args])
 
   // Implementation
+
+  function assertInStore (x) {
+    if (x >= shared._heap.length)
+      throw new Error (`Ess.Store: node #${String(x)} not in Store`)
+    return x
+  }
 
   // apply: FX -> X
   // is a function that applies a 'first order operation',
@@ -435,10 +448,17 @@ function Store () {
 // The runtime!
 // ------------
 
-const [value, pop, left, label, right] = [1, 1, 1, 2, 3]
+function EssDD (_dtree) {
+  this._dtree = _dtree
+  this.run = function (value) {
+    return run (this._dtree)
+  }
+}
 
 // Recall; internally;
 //  [all strings] < null < false < true < [all numbers]
+
+const [value, pop, left, label, right] = [1, 1, 1, 2, 3]
 
 // run -- runs a prebuilt _tree_, e.g. nested tuples/ arrays in js
 //  -- which is secretly a DAG, on a js value as input
@@ -447,10 +467,10 @@ function run (dtree, input) {
   const stack = []
   let ref = input, op, d,t // 
 
-  while ((op = dtree [0]) !== RETURN) { // Nice idea to return a trace, for debugging
+  while ((op = dtree [0]) !== RETURN) {
     if (op === LEAVE) {
       dtree = dtree [pop]
-      ref = stack.pop()
+      ref = stack [--stack.lebgth]
     }
 
     else if (op === TEST) {
@@ -475,6 +495,7 @@ function run (dtree, input) {
   }
   return dtree [value]
 }
+
 
 
 

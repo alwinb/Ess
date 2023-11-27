@@ -29,7 +29,7 @@ ess.assert = (...args) =>
 function compile (string, store = new Store ()) {
   let tm = parse (string)
   let x = store.eval (tm)
-  return { id: x, dtree: store.build (x) }
+  return { id: x, dtree: store.toObject (x) }
 }
 
 

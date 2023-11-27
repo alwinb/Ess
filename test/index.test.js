@@ -26,3 +26,4 @@ log (s.heap)
 
 
 log (ess `name?:any & 1` .test (1))
+log (ess `1 | 2 | false` .test (true))

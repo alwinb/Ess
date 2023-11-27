@@ -5,7 +5,8 @@ const store = new Store ()
 function exec (str) {
   let tm = core.parse (str)
   let x = store.eval (tm)
-  return core.toSvg (store.trace (x) .heap)
+  return core.toSvg (store._trace (x) .heap)
+  // TODO expose this as a sub-store builder
 }
 
 const style = 
