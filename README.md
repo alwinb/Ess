@@ -59,7 +59,7 @@ Note that in Ess, optional record fields are not the same as nullable record fie
 
 # API
 
-There are two distinct APIs. The Ess.Store class exposes the compiler infrastructure in a neat package; it exposes the algebraic operations on Ess decision diagrams, and methods for inspecting their shared structure in memory. There is also a more limited, high level interface that works similar the the RegExp object. 
+There are two distinct APIs. The Ess.Store class exposes the compiler infrastructure in a neat package. It exposes the algebraic operations on Ess decision diagrams, and methods for inspecting their shared structure in memory. There is also a more limited, high level interface that works similar the the RegExp object. 
 
 ## Ess Algebra
 
@@ -67,33 +67,35 @@ The more low-level interface consists of a single Store class, which is used to 
 
 ### Ess.Store
 
-- constructor ()
-- apply ([op, ...args])
-- eval (ast)
-- toObject (ref)
-- toSvg (ref)
-- toSvg ()
+- constructor () -> Ess.Store
+- apply ([op, ...args]) -> ref
+- eval (ast) -> ref
+- toObject (ref) -> object
+- toSvg (ref) -> string
+- toSvg () -> string
 
 The following properties and methods correspond to the constants and operations of the Ess algebra.  
 These result in integers that serve as references back into the store:
 
 - top
-- bot, aka. bottom
-- boolean
-- number
-- string
+- bot aka. bottom
++ boolean aka. bool
++ number
++ string
++ object
++ array
 - value (v)
 - lt (n)
 - lte (n)
 - gte (n)
 - gt (n)
-- not (ref)
-- and (ref1, ref2)
-- or (ref1, ref2)
-- then (ref1, ref2)
-- iff (ref1, ref2)
-- diam (name, ref1)
-- box (name, ref1)
++ not (ref)
++ and (ref1, ref2)
++ or (ref1, ref2)
++ then (ref1, ref2)
++ iff (ref1, ref2)
++ diam (name, ref1)
++ box (name, ref1)
 
 ## EssExp
 

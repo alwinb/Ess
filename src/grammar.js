@@ -31,9 +31,9 @@ const Term = {
   skip: skips,
   end: end `[)]`,
   sig: [
-    { any:    atom `any\b`
+    { any:    atom `any\b|top\b`
     , bottom: atom `bottom\b`
-    , type:   atom `boolean\b | number\b | string\b`
+    , type:   atom `boolean\b | number\b | string\b | object\b | array\b`
     , number: atom `${_int} ${_frac}? ${_exp}?`
     , value:  atom `null\b | true\b | false\b`
     , range:  [LEAF, `<=?|>=?`, 'Range', `.{0}`] // 'wrapfix'-atom

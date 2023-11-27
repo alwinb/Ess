@@ -5,9 +5,12 @@ const samples =
   , '1'
   , '2'
   , 'true'
+  , '"string"'
   , 'false'
   , 'null'
   , 'number'
+  , 'object'
+  , 'array'
   , 'string'
   , 'boolean'
   , null
