@@ -1,6 +1,6 @@
 {
   "name": "ab-ess",
-  "version": "1.0.0-beta.2",
+  "version": "1.0.0-rc1",
   "description": "expression language for JSON like data",
   "main": "src/index.js",
   "scripts": {
