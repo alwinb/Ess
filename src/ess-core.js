@@ -1,8 +1,7 @@
-"use strict"
 const log = console.log.bind (console)
-  , Map = require ('../lib/aatree')
-  , L = require ('../lib/layout')
-  , { Shared, fold, mem_fold } = require ('../lib/base')
+const Map = require ('../lib/aatree')
+const L = require ('../lib/layout')
+const { Shared, fold, mem_fold } = require ('../lib/base')
 
 const cmp_triv = () => 0
 const cmp_js = (t1, t2) =>
@@ -18,6 +17,8 @@ const   TOP = 'any'     // top
     ,  BOOL = 'boolean'
     ,   NUM = 'number'
     ,   STR = 'string'
+    ,   OBJ = 'object'
+    ,   ARR = 'array'
     , VALUE = 'value'   // VALUE v
     ,   BOX = 'box'     // box m x
     ,  DIAM = 'diam'    // diam m x
@@ -92,12 +93,18 @@ function cmpD (cmp_s, cmp_x) {
 // --------------------------------------------------------
 // By imposing an order on primitive javascript values as follows:
 // 
-//  [all numbers] < null < (others) < false < true < [all strings]
+//  [all numbers] < null < (objects) < E < (arrays) < O < (others) < false < true < [all strings]
 // 
 // This total order is implemented by the internalCompare function below. 
 
-const [numType, nullType, otherType, falseType, trueType, stringType] = 
-  [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+const [numType, nullType, objectType, arrayType, otherType, falseType, trueType, stringType] = 
+  [0, 1, 2, 3, 4, 5, 6, 7]
+
+// Internally used sentinel values
+// REVIEW is this really needed, or, is this actually nicer for all other comparisons too?
+
+const firstArray = []
+const firstOther = Symbol ()
 
 function typeof_ (a) {
   const t = typeof a
@@ -106,14 +113,20 @@ function typeof_ (a) {
     : a === null ? nullType
     : a === false ? falseType
     : a === true ? trueType
+    : Array.isArray (a) ? arrayType
+    : typeof a === 'object' ? objectType
     : otherType
 }
 
 function internalCompare (a, b) {
   const ta = typeof_ (a), tb = typeof_ (b)
+  // log ({a, b, ta}, ta === arrayType, a === b, a === firstArray)
   return ta < tb ? -1 : ta > tb ? 1
-    : (ta === numType || ta === stringType ? (a < b ? -1 : a > b ? 1 : 0) : 0)
+    : ta === numType || ta === stringType ? (a < b ? -1 : a > b ? 1 : 0)
+    : ta === arrayType ? (a === b ? 0: (a === firstArray ? -1 : b === firstArray ? 1 : 0))
+    : 0
 }
+
 
 // var a = [ true, false, {}, [], null, 'foo', { valueOf:() => 10}, 10, 22, 'a'].sort (internalCompare)
 // log(a)
@@ -178,12 +191,12 @@ const mem_foldG = mem_fold (G)
 // This traces out the subterm rooted at x
 function traceG (out, x) { 
   const heap = []
-  const inn = fx => heap.push(fx) - 1
+  const inn = node => heap.push (node) - 1
   const memo = { v: new Map (cmp_js) } // memoisation of out :: X -> GX 
   return { heap, element:mem_foldG (memo, out, inn, x) }
 }
 
-// This converts a term-id into a tree;
+// This converts a term-id into a javascript structure;
 // however, internally it preserves the subterm sharing. 
 
 function buildG (out, x) { 
@@ -247,14 +260,34 @@ function Store () {
   const _norm = normalizeDelimiter
   const { inn, out } = shared
 
+  // Store management and inspection
+  
+  this._heap = shared._heap
+  this._out = out
+  this._trace = x => traceG (out, x) // TODO make public
+
+  this.apply = apply
+  this.eval = evalEss
+  this.toObject = x => buildG (out, assertInStore (x))
+
+  // TODO mark the roots?
+  this.toSvg = (x) => toSvg (
+    x != null ? this._trace (assertInStore (x)) .heap
+    : this._heap
+  )
+
   // Precompute the constants
   // These are exposed in the API, and used by apply
 
   const bot  = inn ([RETURN,  false])
   const top  = inn ([RETURN,  true])
   const num  = inn ([TEST,  bot, _norm ([BELOW, null]), top])
-  const str  = inn ([TEST,  top, _norm ([ABOVE, true]), bot])
   const bool = inn ([TEST,  inn ([TEST,  bot, _norm ([ABOVE, true]), top]), _norm ([BELOW, false]), bot])
+
+  const obj = evalEss (['and', ['IGTE', null], ['ILT', firstArray]])
+  const arr = evalEss (['and', ['IGTE', firstArray], ['ILT', firstOther]])
+  const str  = inn ([TEST,  top, _norm ([ABOVE, true]), bot])
+
 
   // Algebraic constants
 
@@ -263,12 +296,16 @@ function Store () {
   this.number = num
   this.string = str
   this.bool = this.boolean = bool
+  this.object = obj
+  this.array = arr
 
   // Algebraic operations
 
   this.value = v => { let t
-    if (v === null || (t = typeof v) === 'number' || t === 'boolean' || t === 'string')
+    if (v === null || (t = typeof v) === 'number' || t === 'boolean')
       return evalEss (['and', ['IGTE', v], ['ILTE', v]])
+    else if (typeof t === 'string')
+      return evalEss (['and', ['and', ['IGTE', v], ['ILTE', v]], ['DIAM', 'lenght', this.value(v.length)]])
     else
       throw new Error ('Ess.Store.value, value must be null, a boolean, a string, or a number')
     // TODO and not NaN
@@ -284,18 +321,16 @@ function Store () {
   this.or   = (...args) => apply ([OR,   ...args])
   this.then = (...args) => apply ([THEN, ...args])
   this.iff  = (...args) => apply ([IFF,  ...args])
-
-  // Store management and inspection
-  
-  this.apply = apply
-  this.eval = evalEss
-
-  this._heap = shared._heap
-  this._out = out
-  this._trace = x => traceG (out, x)
-  this._build = x => buildG (out, x)
+  this.diam = (...args) => apply ([DIAM,  ...args])
+  this.box  = (...args) => apply ([BOX,  ...args])
 
   // Implementation
+
+  function assertInStore (x) {
+    if (x >= shared._heap.length)
+      throw new Error (`Ess.Store: node #${String(x)} not in Store`)
+    return x
+  }
 
   // apply: FX -> X
   // is a function that applies a 'first order operation',
@@ -340,7 +375,7 @@ function Store () {
   // bot: x
 
   function _apply ([op, a, b]) { 
-    //log ('apply', ...arguments)
+    // log ('apply', ...arguments)
     switch (op) {
     case   TOP: return top
     case   BOT: return bot
@@ -350,8 +385,16 @@ function Store () {
 
     case   NUM: return num
     case   STR: return str
+    case   OBJ: return obj
+    case   ARR: return arr
     case  BOOL: return bool
-    case VALUE: return evalEss ([AND, [IGTE, a], [ILTE, a]]) // NB assumes a is primitive
+    case VALUE: {
+      if (typeof a === 'string') {
+        const x = evalEss ([AND, [AND, [IGTE, a], [ILTE, a]], [DIAM, 'length', [VALUE, a.length]]])
+        return x
+      }
+      return evalEss ([AND, [IGTE, a], [ILTE, a]]) // NB assumes a is primitive
+    }
     case    LT: return evalEss ([AND, [ILT,  a], [ILT, null]])
     case   LTE: return evalEss ([AND, [ILTE, a], [ILT, null]])
     case   GTE: return evalEss ([AND, [IGTE, a], [ILT, null]])
@@ -435,10 +478,18 @@ function Store () {
 // The runtime!
 // ------------
 
-const [value, pop, left, label, right] = [1, 1, 1, 2, 3]
+function EssDD (_dtree) {
+  this._dtree = _dtree
+  this.run = function (value) {
+    return run (this._dtree)
+  }
+}
 
 // Recall; internally;
 //  [all strings] < null < false < true < [all numbers]
+// NB no! not anymore! I've added numbers array and object
+
+const [value, pop, left, label, right] = [1, 1, 1, 2, 3]
 
 // run -- runs a prebuilt _tree_, e.g. nested tuples/ arrays in js
 //  -- which is secretly a DAG, on a js value as input
@@ -447,10 +498,10 @@ function run (dtree, input) {
   const stack = []
   let ref = input, op, d,t // 
 
-  while ((op = dtree [0]) !== RETURN) { // Nice idea to return a trace, for debugging
+  while ((op = dtree [0]) !== RETURN) {
     if (op === LEAVE) {
       dtree = dtree [pop]
-      ref = stack.pop()
+      ref = stack [--stack.lebgth]
     }
 
     else if (op === TEST) {
@@ -478,6 +529,7 @@ function run (dtree, input) {
 
 
 
+
 // Layout
 // ------
 
@@ -494,6 +546,16 @@ function rank (gx) {
 // To see what we are doing, it is useful to be able to draw G-nodes. 
 // Draws a G-node `n` containing points {x, y} at point `pt`. 
 
+function testLabelFor ([d,v]) { // TODO careful, my svg renderer is sloppy and does no sting escapes
+  const ds = (d === BELOW ? '< ' : '≤ ')
+  const vs = 
+    ( v === firstOther ? 'others'
+    : v === firstArray ? 'arrays'
+    : v == null ? 'null'
+    : JSON.stringify (v))
+  return ds + vs
+}
+
 function picFor (n) {
   const c = n[0]
   if (c === TEST) return {
@@ -503,7 +565,7 @@ function picFor (n) {
     class:c,
     anchor: {x:0, y:-18},
     shape:'M 36 -6 m 0 -12.8 a1 1 0 1 1 0 25.6 l-72 0 a1 1 0 1 1 0 -25.6 z',
-    label:JSON.stringify (n[2]) .replace (/^\[|\]$/g, ''),
+    label: testLabelFor (n[2]),
     anchors: [
       { for:1, class:'false', dir:-4/12, from: {x:-48, y:0 }, bend:1 },
       { for:3, class:'true',  dir: 4/12, from: {x: 48, y:0 }, bend:1 }
@@ -516,7 +578,7 @@ function picFor (n) {
     anchor: {x:0, y:-18},
     class:c,
     shape:'M0 -5 m-54 0 l 12 12 h84 l12 -12 l-12 -12 h-84zm114 0 l-18 18',
-    label:n[2],
+    label: n[2],
     anchors: [
       { for:1, class:'false', from:{x:-48, y:0}, dir:-3/8 },
       { for:3, class:'true',  from:{x: 48, y:0}, dir: 3/8 }

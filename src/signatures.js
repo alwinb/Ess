@@ -65,6 +65,8 @@ const Terms = {
   number:  [],
   boolean: [],
   string:  [],
+  object:  [],
+  array:   [],
 
   value:  ['primitive'],
   lt:     ['number'],

@@ -26,3 +26,35 @@ log (s.heap)
 
 
 log (ess `name?:any & 1` .test (1))
+log (ess `1 | 2 | false` .test (true))
+
+log ('\ntest object\n--------')
+log (ess `object` .test (1))
+log (ess `object` .test ([]))
+log (ess `object` .test (Symbol()))
+log (ess `object` .test (true))
+log (ess `object` .test (false))
+log (ess `object` .test ('foo'))
+log (ess `object` .test (x => x))
+
+// should be true
+
+log ('should be true')
+log (ess `object` .test ({}))
+
+log ('\ntest array\n--------')
+log (ess `array` .test (1))
+log (ess `array` .test ({}))
+log (ess `array` .test (Symbol()))
+log (ess `array` .test (true))
+log (ess `array` .test (false))
+log (ess `array` .test ('foo'))
+log (ess `array` .test (x => x))
+
+// should be true
+
+log ('should be true')
+log (ess `array` .test ([]))
+
+
+log (ess `string & ("foo" | "bars") & length:3`)
