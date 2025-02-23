@@ -1,20 +1,24 @@
 # Ess Expression Language
 
-Ess is an expression language for describing properties of data structures that are built up from primitive values and nested records. 
-It supports the boolean algebra operations and optional and required record fields on top of primitive types, primitive values and numeric ranges. 
+Ess is an expression language for describing properties of data structures.
+It can describe boolean combinations of records with optional and required fields
+on top of primitive types, numerical ranges and singleton values as types.
 
 ## Motivation
 
-The motivation for this project is to investigate semantic rather than proof theoretic approaches for implementing type systems; to develop new data structures for representing types, and to use the concept of **canonical representation** to decide type equivalence and subtype relationships.  
+The motivation for this project is to investigate semantic rather than proof theoretic approaches for implementing type systems; to develop new data structures for representing types, and to use the concept of **canonical representation** to decide type equivalence and subtype relationships.
 
-In Ess, type expressions are compiled to a decision tree datastructure that has a reduced, ordered variant to achieve canonical representation. This effectively turns the compiler into a theorem prover that can be used to decide equivalence of type expressions. Since the Ess language includes the boolean algebra operations, it can also be used to compute subtype relationships.
+In Ess, type expressions are compiled to a reduced and ordered decision tree datastructure.
+These decision trees uniquely represent the semantics of an Ess expression. This means that for any two Ess expressions, if they compile to the same decision tree, then the expressions are semantically equivalent.
+
+This approach is inspired by use of Binary Decision Diagrams to compute equivalence of expressions in propositional logic; and the use of Deterministic Finite Automata to compute equivalence of regular expressions. Ess however does not compile expressions to classic BDDs but instead it uses a decision tree datastructure that is specifically designed for the Ess language itself.
+
+This technique effectively turns the compiler into a theorem prover for the Ess language. And since Ess can express boolean combinations, it can also be used to compute subtype relationships.
 
 [bdd]: https://en.wikipedia.org/wiki/Binary_decision_diagram
 
 
 ## Syntax
-
-### Basics
 
 Primitives:
 
@@ -50,26 +54,33 @@ The record field (prefix) operators _name_`:` and _name_`?:` bind strongest, so 
 
 ### Optional versus Nullable
 
-Note that in Ess, optional record fields are not the same as nullable record fields. 
+In Ess, optional record fields are not the same as nullable record fields.
+Specifically the language makes a distinction between presence of a field in an object, and the value of a field in that object; and it allows testing for presence and testing for a null value with distinct expressions:
 
-- `id?: number`: does not match `{id:null}` but does match `{}` and `{id:1}`. 
-- `id: (number | null)` does not match `{}` but does match `{id:null}` and `{id:1}`. 
-- `id?: (number | null)`: matches all of `{}`, `{id:null}` and `{id:1}`. 
+- Required, non-nullable: `id: number`.
+  This matches `{ id:1 }` but it does not match `{}` nor `{ id:null }`. 
+- Optional, non-nullable: `id?: number`
+  This matches `{ id:1 }` and `{}` but it does not match `{ id:null }`.
+- Required, nullable: `id: (number | null)` 
+  This matches `{ id:null }` and `{ id:1 }` but it does not match `{ }`.
+- Optional, nullable: `id?: (number | null)`: 
+  This matches all of `{id:1}`, `{id:null}` and `{}`. 
 
 
 # API
 
-There are two distinct APIs. The Ess.Store class exposes the compiler infrastructure in a neat package. It exposes the algebraic operations on Ess decision diagrams, and methods for inspecting their shared structure in memory. There is also a more limited, high level interface that works similar the the RegExp object. 
+There are two distinct APIs. The Ess.Store class exposes the compiler infrastructure in a neat package. It exposes the algebraic operations on Ess decision diagrams, and methods for inspecting the shared structure of Ess decision diagrams in memory. There is also a more limited, high level interface that works similar to the RegExp object. 
 
-## Ess Algebra
+## Ess.Store
 
-The more low-level interface consists of a single Store class, which is used to store reduced, ordered Ess decision diagrams and provides methods that corespond to the algebraic operations on them. 
+The main interface consists of a single Ess.Store class. An Ess.Store is used to store reduced, ordered Ess decision diagrams. These decision diagrams are _canonical representations_ of Ess expressions; this means that any two Ess expressions that have the same meaning, are stored as one and the same decision diagram.
 
-### Ess.Store
+The Store class furthermore exposes methods that correspond to the algebraic signature and operations of the Ess language. 
 
 - constructor () -> Ess.Store
 - apply ([op, ...args]) -> ref
 - eval (ast) -> ref
+- deref (ref) -> [node_type, ...children]
 - toObject (ref) -> object
 - toSvg (ref) -> string
 - toSvg () -> string
@@ -152,3 +163,18 @@ var exp = new EssExp ('true & !boolean')
 exp.isTop // => false
 exp.isBottom // => true
 ```
+
+
+## License
+
+This project is free software: you can redistribute it and/or modify it under
+the terms of the [GNU Lesser General Public License][1] version 3, as published
+by the Free Software Foundation.
+
+Copyright © 2016–2020 Alwin Blok.
+
+This project is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
+
+[1]: ./LICENSE.md

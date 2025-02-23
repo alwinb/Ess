@@ -68,8 +68,9 @@ function main (samples) {
       log (exec (sample))
       log ('</div>')
     })
+	process.exit (205)
 }
 
-const samples = require ('./samples')
+require ('./samples') // assigns to globalThis...
 main (samples)
 

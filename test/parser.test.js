@@ -1,6 +1,4 @@
-const AATree = require ('../lib/aatree.js')
-const { parse } = require ('../src/grammar')
-const { layout2, Canvas } = require ('../lib/layout')
+const { core, lib:{ AATree, layout2 } } = require ('../src/index.js')
 
 const {
   Terms, RawTerms, refold, 
@@ -12,7 +10,17 @@ const log = console.log.bind (console)
 const compareJs = (t1, t2) =>
   t1 < t2 ? -1 : t1 > t2 ? 1 : 0
 
-///////////
+
+// ParseTree to SVG
+// ----------------
+
+// Made with signature generic tools
+
+// const signature = RawTerms
+const signature = Terms
+const F = createFunctor (signature)
+const createImage = createImageFunction (signature)
+const rank = createRankFunction (signature)
 
 function toSvg (tree) {
 
@@ -35,23 +43,16 @@ function toSvg (tree) {
   return C.render()
 }
 
-/////// Test
+
+// Test
 
 // var str = '"foo\\nbar\\nbaz"'
 // var str = 'foo:true & bar:false & (true|false) | "foo\\nbar"'
 // var str = '<10 & name:"joe" | null & true | 3 & false | boolean | string'
-//
-// var tree = parse (str)
+// var tree = core.parse (str)
 //log(JSON.stringify(tree, null,2))
 //log (toSvg (tree))
 // log (str)
-//
-
-// const signature = RawTerms
-const signature = Terms
-const F = createFunctor (signature)
-const createImage = createImageFunction (signature)
-const rank = createRankFunction (signature)
 
 
 const style = 
@@ -102,11 +103,12 @@ function main (samples) {
     .filter (sample => sample != null)
     .forEach (sample => {
       log ('<div class=box>\n<code class=input>', sample, '</code>')
-      log (toSvg (parse (sample)))
+      log (toSvg (core.parse (sample)))
       log ('</div>')
     })
+  process.exit (205)
 }
 
-const samples = require ('./samples')
+require ('./samples')
 main (samples)
 

@@ -72,7 +72,7 @@ const samples =
 
   , '"joe"'
    , `"Hello, \\n\\t World!"`
-  , `"U -\\u0065BC"`
+  , `"U\\u0041BC"`
   , '"joe" & "fred"'
   , '"joe" | "fred"'
   , '!"joe" & !"fred"'
@@ -88,4 +88,4 @@ const samples =
 
   ]
 
-module.exports = samples
+globalThis.samples = samples

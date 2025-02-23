@@ -9,6 +9,37 @@ const log = console.log.bind (console)
 // of type names, where where I use `0` (inspired by marijnh; 
 // pronounced 'hole') to stand for the type variable. 
 
+// Ess Terms
+// ---------
+// The signature of Ess terms. This encodes exactly the signature
+// as in the theory: a multimodal logic over some base types and
+// numeric bounds. 
+
+const Terms = {
+  any:     [],
+  bottom:  [],
+  and:     [0, 0],
+  or:      [0, 0],
+  not:     [0   ],
+  then:    [0, 0],
+  iff:     [0, 0],
+  diam:    ['name', 0],
+  box:     ['name', 0],
+
+  number:  [],
+  boolean: [],
+  string:  [],
+  object:  [],
+  array:   [],
+
+  value:  ['primitive'],
+  lt:     ['number'],
+  lte:    ['number'],
+  gte:    ['number'],
+  gt:     ['number'],
+}
+
+
 // Raw terms
 // ---------
 // The signature of raw parse trees. These trees have more nesting
@@ -44,36 +75,6 @@ const RawTerms = {
   escaped: ['escaped'],
 }
 
-
-// Ess Terms
-// ---------
-// The signature of Ess terms. This encodes exactly the signature
-// as in the theory: a multimodal logic over some base types and
-// numeric bounds. 
-
-const Terms = {
-  any:     [],
-  bottom:  [],
-  and:     [0, 0],
-  or:      [0, 0],
-  not:     [0   ],
-  then:    [0, 0],
-  iff:     [0, 0],
-  diam:    ['name', 0],
-  box:     ['name', 0],
-
-  number:  [],
-  boolean: [],
-  string:  [],
-  object:  [],
-  array:   [],
-
-  value:  ['primitive'],
-  lt:     ['number'],
-  lte:    ['number'],
-  gte:    ['number'],
-  gt:     ['number'],
-}
 
 // Ess Decision Diagrams
 // ---------------------
@@ -122,6 +123,12 @@ const createRankFunction = signature => ([op, ...args]) => {
   return r + 1
 }
 
+// An 'Image' is an object with a width, height and depth
+// (height is ascender, depth is descender from baseline),
+// together with an anchor (incoming references) and a list
+// of anchors for outgoing / child nodes;
+// a text label, and an svg pathData 'shape'.
+
 const createImageFunction = signature => node => {
   const CHAR_WIDTH = 8 // TODO
   
@@ -150,11 +157,8 @@ const createImageFunction = signature => node => {
 // Exports
 // -------
 
-module.exports =
-  { RawTerms
-  , Terms
-  , createFunctor
-  , refold
-  , createImageFunction
-  , createRankFunction
-  }
+module.exports = {
+  RawTerms, Terms, Ternaries,
+  createFunctor, createImageFunction, createRankFunction,
+  refold,
+}

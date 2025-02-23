@@ -1,7 +1,7 @@
-.PHONY: all clean ess
+.PHONY: clean ess
 
 libs = aatree.js base.js layout.js
-srcs = browser.js ess-core.js grammar.js index.js signatures.js
+srcs = ess-core.js grammar.js index.js signatures.js
 lib = $(addprefix lib/, $(libs)) 
 src = $(addprefix src/, $(srcs)) 
 
@@ -21,15 +21,11 @@ dist/:
 
 # Ess bundles
 
-ess: dist/ess.out.js dist/ess.min.js
-
-dist/ess.out.js: dist/ $(lib) $(src) Makefile
-	@ echo "Making browser bundle"
-	@ esbuild --bundle src/browser.js > dist/ess.out.js
+ess: dist/ess.min.js
 
 dist/ess.min.js: dist/ $(lib) $(src) Makefile
-	@ echo "Making minified browser bundle"
-	@ esbuild --bundle --minify src/browser.js > dist/ess.min.js
+	@ echo "Making minified bundle"
+	@ esbuild --bundle --minify src/index.js > dist/ess.min.js
 
 # Repl
 

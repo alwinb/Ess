@@ -1,0 +1,93 @@
+<!doctype html><meta charset=utf8>
+<script src="../dist/ess.min.js"></script>
+<script src="./samples.js"></script>
+<style>
+  .box {
+    border:1px solid black;
+    padding:.5em;
+    margin:0 -1px -1px 0;
+    margin:2px .5rem 1rem;
+    display:inline-block;
+    vertical-align:top;
+  }
+  .box .input {
+    display:block;
+    align:auto 0;
+    text-align:center;
+    background:#0001;
+    border-radius:4px;
+    padding:3px .5em;
+    margin-bottom:1em;
+    border:1px solid #0002;
+  }
+  text {
+  	font-size:16.5;
+  	fill:black;
+  	text-anchor:middle;
+  	font-style:italic;
+  }
+  text.return {
+    font-style:normal;
+  }
+  path, rect {
+    fill:none;
+    stroke:black;
+  }
+  rect {
+    stroke:#0962;
+  }
+  text {
+    text-anchor:middle;
+    fill:black;
+  }
+  path.node {
+    fill:#fff6;
+  }
+  path.false {
+	stroke-dasharray:3,3;
+  }
+</style>
+<body>
+<h1>Ess</h1>
+<p>Decision Tree Compiler Test Page</p>
+<script>
+
+function h (tag,...subs) {
+  tag = tag.split ('.')
+  const el = document.createElement (tag.shift ())
+  if (tag.length) el.classList.add (...tag)
+  el.append (...subs)
+  return el
+}
+
+//
+
+const { Store, core } = window.Ess
+const log = console.log.bind (console)
+
+const store = new Store ()
+function exec (str) {
+  let tm = core.parse (str)
+  let x = store.eval (tm)
+  return core.toSvg (store._trace (x) .heap)
+  // TODO expose this as a sub-store builder
+}
+
+
+
+function main (samples) {
+  samples
+    .filter (sample => sample != null)
+    .forEach (sample => {
+      let out
+      document.body.append (h('div.box',
+        h('code.input', sample),
+        out = h('div.result')
+      ))
+      out.innerHTML = exec (sample)
+    })
+}
+
+main (samples)
+
+</script>

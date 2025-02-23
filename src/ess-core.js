@@ -8,7 +8,6 @@ const cmp_js = (t1, t2) =>
   t1 < t2 ? -1 : t1 > t2 ? 1 : 0
 
 
-
 // The Ess Term Algebra for Desugared Terms
 // ----------------------------------------
 
@@ -268,6 +267,7 @@ function Store () {
 
   this.apply = apply
   this.eval = evalEss
+  this.deref = out
   this.toObject = x => buildG (out, assertInStore (x))
 
   // TODO mark the roots?
@@ -277,17 +277,15 @@ function Store () {
   )
 
   // Precompute the constants
-  // These are exposed in the API, and used by apply
+  // These are exposed in the API, and are used by apply
 
   const bot  = inn ([RETURN,  false])
   const top  = inn ([RETURN,  true])
   const num  = inn ([TEST,  bot, _norm ([BELOW, null]), top])
   const bool = inn ([TEST,  inn ([TEST,  bot, _norm ([ABOVE, true]), top]), _norm ([BELOW, false]), bot])
-
-  const obj = evalEss (['and', ['IGTE', null], ['ILT', firstArray]])
-  const arr = evalEss (['and', ['IGTE', firstArray], ['ILT', firstOther]])
+  const obj  = evalEss (['and', ['IGTE', null], ['ILT', firstArray]])
+  const arr  = evalEss (['and', ['IGTE', firstArray], ['ILT', firstOther]])
   const str  = inn ([TEST,  top, _norm ([ABOVE, true]), bot])
-
 
   // Algebraic constants
 
@@ -316,12 +314,12 @@ function Store () {
   this.gte  = n => apply ([GTE, n])
   this.gt   = n => apply ([GT,  n])
 
-  this.not = not
+  this.not  = not
   this.and  = (...args) => apply ([AND,  ...args])
   this.or   = (...args) => apply ([OR,   ...args])
   this.then = (...args) => apply ([THEN, ...args])
   this.iff  = (...args) => apply ([IFF,  ...args])
-  this.diam = (...args) => apply ([DIAM,  ...args])
+  this.diam = (...args) => apply ([DIAM, ...args])
   this.box  = (...args) => apply ([BOX,  ...args])
 
   // Implementation

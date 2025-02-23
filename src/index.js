@@ -36,4 +36,14 @@ function compile (string, store = new Store ()) {
 // Exports
 // -------
 
-module.exports = { EssExp, ess, Store, core: { parse, Store, toSvg, compile } }
+// Re-export some of the library
+
+const lib = require ('../lib/layout')
+lib.AATree = require ('../lib/aatree')
+
+const Ess = { EssExp, ess, Store, core: { parse, Store, toSvg, compile }, lib }
+module.exports = Ess
+
+// Assign to window in browser
+if (typeof window !== undefined)
+  globalThis.Ess = Ess
